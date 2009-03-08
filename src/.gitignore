@@ -1,0 +1,10 @@
+/.deps
+eyefi.nsmap
+soapC.cpp
+soapH.h
+soapStub.h
+soapeyefiService.cpp
+soapeyefiService.h
+*.o
+/iiid
+/COPYING.cc

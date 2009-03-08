@@ -1,0 +1,106 @@
+.TH iiid 8 "March 8th, 2009" "iiid(8)" "Klever Group (http://www.klever.net/)"
+.hla en
+
+.SH NAME
+
+iiid \- An eye-fi card management daemon
+
+.SH SYNOPSYS
+
+\fBiiid\fR
+[\fB-h\fR] [\fB--help\fR] [\fB--usage\fR]
+[\fB-V\fR] [\fB--version\fR]
+[\fB-L\fR] [\fB--license\fR]
+[\fB-p\fR \fIport\fR] [\fB--port=\fR\fIport\fR]
+
+.SH DESCRIPTION
+
+iiid daemon is a minimalistic open source eye-fi management daemon
+implementation. It is listening for incoming connections and accepts files from
+eye-fi card, optionally invoking scripts to sort out files or send out
+notifications.
+
+.SH OPTIONS
+
+.TP
+\fB-p\fR \fIport\fR, \fB--port=\fR\fIport\fR
+Set the port to listen to. You're not likely to ever need to change this,
+perhaps for debugging purpose or if you want to proxy connections.
+.TP
+\fB-h\fR, \fB--help\fR, \fB--usage\fR
+Display short usage instructions and exit.
+.TP
+\fB-V\fR, \fB--version\fR
+Report version and exit.
+.TP
+\fB-L\fR, \fB--license\fR
+Show licensing terms.
+
+.SH EXIT STATUS
+
+The daemon isn't supposed to exit at this point, but, like most executables, it returns zero in case of success, non-zero otherwise.
+
+.SH FILES
+
+.TP
+@sysconfdir@/iii/\fBXXXXXXXXXXXX.conf/fR
+Upon successfull connection, the daemon reads the configuration from this file,
+where XXXXXXXXXXXX is the macaddress of your eyefi card. You can lookup the mac
+address of your card in your Mac/Windows Settings.xml file. Be sure to remove
+dashes from it.
+
+.SH CONFIGURATION OPTIONS
+
+.TP
+\fBtargetdir\fR = "\fI/var/lib/iii/%s/\fR"
+Sets the target directory for uploaded files. If the \fI%s\fR placeholder is
+present in the string, it is replaced with card mac address.
+.TP
+\fBuploadkey\fR = "\fIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\fR"
+The upload key as seen in Mac/Windows Settings.xml file.
+.TP
+\fBon-start-session\fR = "\fIlogger iii-StartSession ${EYEFI_MACADDRESS} ${EYEFI_TRANSFER_MODE} ${EYEFI_TRANSFERMODETIMESTAMP}\fR"
+The command to execute on \fBStartSession\fR request. The command receives some
+information via environment variables.
+.TP
+\fBon-upload-photo\fR = "\fIlogger iii-UploadPhoto ${EYEFI_MACADDRESS} ${EYEFI_UPLOADED}\fR"
+The command to execute after successfull photo upload. The information about
+the card mac address and uploaded file name is passed via environment
+variables.
+.TP
+\fBon-mark-last-photo-in-roll\fR = "\fIlogger iii-MarkLastPhotoInRoll ${EYEFI_MACADDRESS} ${EYEFI_MERGEDELTA}\fR"
+The command to execute on \fBMarkLastPhotoInRoll\fR request. The information
+about request is passed via environment variables.
+.TP
+\fBumask\fR = \fI002\fR
+The file mode creation mask.
+
+.SH AUTHOR
+
+Written by Michael Krelin <hacker@klever.net>
+
+.SH COPYRIGHT
+
+Copyright (c) 2009 Klever Group (http://www.klever.net/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+.SH BUGS
+
+You tell me. Send reports to <iii-bugs@klever.net>

@@ -1,0 +1,12 @@
+Klever dissected:
+	Michael 'hacker' Krelin <hacker@klever.net>
+	Leonid Ivanov <kamel@klever.net>
+
+
+Thanks to:
+
+Brian Muller <bmuller AT butterfat DOT net> of mod_auth_openid project for
+suggestions, bug reports, testing and actually making use of the library.
+
+Joseph Smarr <joseph AT plaxo DOT com> of plaxo.com for robustness enhancements
+and making use of my work.

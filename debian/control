@@ -1,0 +1,13 @@
+Source: iii
+Section: graphics
+Priority: optional
+Maintainer: Michael Krelin <hacker@klever.net>
+Build-Depends: debhelper (>=7), gsoap, libssl-dev, libconfuse-dev, libarchive-dev, gettext
+Standards-Version: 3.8.0
+
+Package: iii
+Architecture: any
+Depends: adduser, ${shlibs:Depends}
+Description: Eye-Fi Manager implementation
+ Implementation of Eye-Fi manager service for Linux
+
