@@ -120,7 +120,6 @@ int eyefiService::UploadPhoto(
     umask(eyekinfig.get_umask());
 
     std::string td = eyekinfig.get_targetdir();
-    /* TODO: try to create, if needed */
     tmpdir_t indir(td+"/.incoming.XXXXXX");
 
     for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {

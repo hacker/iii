@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <syslog.h>
 #include <iostream>
 #include <cassert>
@@ -51,7 +52,22 @@ binary_t binary_t::md5() const {
     return rv;
 }
 
+static void make_path_for_template(const std::string& p,mode_t m) {
+    struct stat st;
+    std::string pp;
+    for(std::string::size_type sl=p.find('/',1);
+	    sl!=std::string::npos;
+	    sl=p.find('/',sl+1)) {
+	if(stat( (pp=p.substr(0,sl)).c_str() ,&st)
+		|| !S_ISDIR(st.st_mode)) {
+	    if(mkdir(pp.c_str(),m))
+		throw std::runtime_error("failed to mkdir()");
+	}
+    }
+}
+
 tmpdir_t::tmpdir_t(const std::string& dt) : dir(dt) {
+    make_path_for_template(dt,0777);
     if(!mkdtemp((char*)dir.data()))
 	throw std::runtime_error("failed to mkdtmp()");
 }
