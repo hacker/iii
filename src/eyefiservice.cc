@@ -49,8 +49,8 @@ int eyefiService::StartSession(
     /* TODO: better nonce generator */
     time_t t = time(0);
     r.snonce = binary_t(&t,sizeof(t)).md5().hex();
-    r.transfermode=2;
-    r.transfermodetimestamp=t;
+    r.transfermode=transfermode;
+    r.transfermodetimestamp=transfermodetimestamp;
     r.upsyncallowed=false;
 
     std::string cmd = eyekinfig_t(macaddress).get_on_start_session();
