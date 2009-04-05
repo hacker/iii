@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
- <version version="0.1" date="">
+ <version version="0.1" date="April 5th, 2009">
   <ni>integrity digest verification</ni>
   <ni>try to create upload directory if it doesn't exist</ni>
  </version>
