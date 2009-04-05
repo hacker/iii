@@ -52,7 +52,7 @@ fi
 
 ndebug=true
 AC_ARG_ENABLE([debug],
- AC_HELP_STRING([--enable-debug],[enable debugginc code]),
+ AC_HELP_STRING([--enable-debug],[enable debugging code]),
  [ test "$enableval" = "no" || ndebug=false ]
 )
 if $ndebug ; then
