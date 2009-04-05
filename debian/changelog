@@ -1,3 +1,12 @@
+iii (0.1) unstable; urgency=low
+
+  * 0.1 release
+  * check uploaded file integrity
+  * integrity digest calculation
+  * make upload directory if it doesn't exist
+
+ -- Michael Krelin <hacker@klever.net>  Sun, 05 Apr 2009 15:55:48 +0200
+
 iii (0.0) unstable; urgency=low
 
   * Initial release
