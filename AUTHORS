@@ -5,8 +5,5 @@ Klever dissected:
 
 Thanks to:
 
-Brian Muller <bmuller AT butterfat DOT net> of mod_auth_openid project for
-suggestions, bug reports, testing and actually making use of the library.
-
-Joseph Smarr <joseph AT plaxo DOT com> of plaxo.com for robustness enhancements
-and making use of my work.
+cdavies of Eye-Fi forums for integrity digest verification algorithm.
+	See http://forums.eye.fi/viewtopic.php?f=4&t=270&p=4074#p4074
