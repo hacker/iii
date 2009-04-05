@@ -4,11 +4,12 @@
 #include <iostream>
 #include <cassert>
 #include <stdexcept>
+#include <algorithm>
+#include <numeric>
 #include <openssl/md5.h>
 #include "eyetil.h"
 
 binary_t& binary_t::from_hex(const std::string& h) {
-    /* TODO: algorithmize */
     std::string::size_type hs = h.length();
     if(hs&1)
 	throw std::runtime_error("odd number of characters in hexadecimal number");
@@ -116,4 +117,30 @@ std::string tarchive_t::entry_pathname() {
 bool tarchive_t::read_data_into_fd(int fd) {
     assert(a);
     return archive_read_data_into_fd(a,fd)==ARCHIVE_OK;
+}
+
+#pragma pack(1)
+struct block512_t {
+    enum { words = 512 / sizeof(uint16_t) };
+    uint16_t data[words];
+
+    static uint16_t tcpcksum(block512_t& data) {
+	uint32_t sum = std::accumulate(data.data,data.data+words,0);
+	while(uint32_t hw = sum>>16) sum = (sum&0xffff)+hw;
+	return ~sum;
+    }
+
+};
+#pragma pack()
+
+binary_t integrity_digest(const void *ptr,size_t size,const std::string& ukey) {
+    binary_t key; key.from_hex(ukey);
+    std::vector<uint16_t> blksums; blksums.reserve(size/sizeof(block512_t));
+    block512_t *db = (block512_t*)ptr,
+	       *de = db + size/sizeof(block512_t);
+    std::transform( db, de, std::back_inserter(blksums), block512_t::tcpcksum );
+    binary_t subject;
+    subject.from_data((void*)&(blksums.front()),blksums.size()*sizeof(uint16_t));
+    std::copy( key.begin(), key.end(), std::back_inserter(subject) );
+    return subject.md5();
 }

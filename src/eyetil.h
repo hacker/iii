@@ -45,4 +45,7 @@ class tarchive_t {
 	bool read_data_into_fd(int fd);
 };
 
+binary_t integrity_digest(const void *ptr,size_t size,
+	const std::string& ukey);
+
 #endif /* __EYETIL_H */
