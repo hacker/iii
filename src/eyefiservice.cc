@@ -122,6 +122,9 @@ int eyefiService::UploadPhoto(
     std::string td = eyekinfig.get_targetdir();
     tmpdir_t indir(td+"/.incoming.XXXXXX");
 
+    std::string jf;
+    binary_t digest, idigest;
+
     for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {
 #ifndef NDEBUG
 	syslog(LOG_DEBUG,
@@ -129,12 +132,13 @@ int eyefiService::UploadPhoto(
 		(*i).id, (*i).type, (long)(*i).size );
 #endif
 
-#ifndef NDEBUG
 	if((*i).id && !strcmp((*i).id,"INTEGRITYDIGEST")) {
-	    std::string idigest((*i).ptr,(*i).size);
-	    syslog(LOG_DEBUG, " INTEGRITYDIGEST=%s", idigest.c_str());
-	}
+	    std::string idigestr((*i).ptr,(*i).size);
+#ifndef NDEBUG
+	    syslog(LOG_DEBUG, " INTEGRITYDIGEST=%s", idigestr.c_str());
 #endif
+	    idigest.from_hex(idigestr);
+	}
 	if( (*i).id && !strcmp((*i).id,"FILENAME") ) {
 	    assert( (*i).type && !strcmp((*i).type,"application/x-tar") );
 #ifdef III_SAVE_TARS
@@ -143,43 +147,56 @@ int eyefiService::UploadPhoto(
 		std::ofstream(tarfile.c_str(),std::ios::out|std::ios::binary).write((*i).ptr,(*i).size);
 	    }
 #endif
+
+	    if(!jf.empty()) throw std::runtime_error("already seen tarball");
+	    if(!digest.empty()) throw std::runtime_error("already have integrity digest");
+	    digest = integrity_digest((*i).ptr,(*i).size,eyekinfig.get_upload_key());
+#ifndef NDEBUG
+	    syslog(LOG_DEBUG," computed integrity digest=%s", digest.hex().c_str());
+#endif
+
 	    tarchive_t a((*i).ptr,(*i).size);
 	    if(!a.read_next_header())
 		throw std::runtime_error("failed to tarchive_t::read_next_header())");
-	    std::string jf = indir.get_file(a.entry_pathname());
-	    std::string::size_type ls = jf.rfind('/');
-	    std::string jbn = (ls==std::string::npos)?jf:jf.substr(ls+1);
+	    jf = indir.get_file(a.entry_pathname());
 	    int fd=open(jf.c_str(),O_CREAT|O_WRONLY,0666);
 	    assert(fd>0);
 	    a.read_data_into_fd(fd);
 	    close(fd);
-	    std::string tf = td+'/'+jbn;
-	    bool success = false;
+	}
+    }
+
+    if(jf.empty()) throw std::runtime_error("haven't seen jpeg file");
+    if(digest!=idigest) throw std::runtime_error("integrity digest verification failed");
+
+    std::string::size_type ls = jf.rfind('/');
+    std::string jbn = (ls==std::string::npos)?jf:jf.substr(ls+1);
+    std::string tf = td+'/'+jbn;
+    bool success = false;
+    if(!link(jf.c_str(), tf.c_str())) {
+	unlink(jf.c_str()); success = true;
+    }else{
+	for(int i=1;i<32767;++i) {
+	    tf = (const char*)gnu::autosprintf( "%s/(%05d)%s",
+		    td.c_str(), i, jbn.c_str() );
 	    if(!link(jf.c_str(), tf.c_str())) {
 		unlink(jf.c_str()); success = true;
-	    }else{
-		for(int i=1;i<32767;++i) {
-		    tf = (const char*)gnu::autosprintf( "%s/(%05d)%s",
-			    td.c_str(), i, jbn.c_str() );
-		    if(!link(jf.c_str(), tf.c_str())) {
-			unlink(jf.c_str()); success = true;
-			break;
-		    }
-		}
-	    }
-	    std::string cmd = eyekinfig.get_on_upload_photo();
-	    if(success && !cmd.empty()) {
-		if(detached_child()) {
-		    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
-		    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",tf.c_str()) );
-		    char *argv[] = { (char*)"/bin/sh", (char*)"-c", (char*)cmd.c_str(), 0 };
-		    execv("/bin/sh",argv);
-		    syslog(LOG_ERR,"Failed to execute '%s'",cmd.c_str());
-		    _exit(-1);
-		}
+		break;
 	    }
 	}
     }
+    std::string cmd = eyekinfig.get_on_upload_photo();
+    if(success && !cmd.empty()) {
+	if(detached_child()) {
+	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
+	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",tf.c_str()) );
+	    char *argv[] = { (char*)"/bin/sh", (char*)"-c", (char*)cmd.c_str(), 0 };
+	    execv("/bin/sh",argv);
+	    syslog(LOG_ERR,"Failed to execute '%s'",cmd.c_str());
+	    _exit(-1);
+	}
+    }
+
     r.success = true;
     return SOAP_OK;
 }
