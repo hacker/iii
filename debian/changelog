@@ -1,3 +1,10 @@
+iii (0.1klever1) unstable; urgency=low
+
+  * better nonce generation
+  * session nonce verification based on Chris Davies patch
+
+ -- Michael Krelin <hacker@klever.net>  Mon, 06 Apr 2009 22:30:08 +0200
+
 iii (0.1) unstable; urgency=low
 
   * 0.1 release
