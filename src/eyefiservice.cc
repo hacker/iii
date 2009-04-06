@@ -6,9 +6,12 @@
 #include <syslog.h>
 #include <sys/wait.h>
 #include <autosprintf.h>
+#include <openssl/rand.h>
 #include "eyekinfig.h"
 #include "eyetil.h"
 #include "soapeyefiService.h"
+
+static binary_t session_nonce;
 
 static bool detached_child() {
     pid_t p = fork();
@@ -46,9 +49,8 @@ int eyefiService::StartSession(
 	    macaddress.c_str(), cnonce.c_str(), transfermode, transfermodetimestamp );
 #endif
     r.credential = binary_t(macaddress+cnonce+eyekinfig_t(macaddress).get_upload_key()).md5().hex();
-    /* TODO: better nonce generator */
-    time_t t = time(0);
-    r.snonce = binary_t(&t,sizeof(t)).md5().hex();
+
+    r.snonce = session_nonce.make_nonce().hex();
     r.transfermode=transfermode;
     r.transfermodetimestamp=transfermodetimestamp;
     r.upsyncallowed=false;
@@ -74,9 +76,18 @@ int eyefiService::GetPhotoStatus(
 	struct rns__GetPhotoStatusResponse &r ) {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
-	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s",
-	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str() );
+	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s; session nonce=%s",
+	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), session_nonce.hex().c_str() );
 #endif
+
+    std::string computed_credential = binary_t(macaddress+eyekinfig_t(macaddress).get_upload_key()+session_nonce.hex()).md5().hex();
+
+#ifndef NDEBUG
+    syslog(LOG_DEBUG, " computed credential=%s", computed_credential.c_str());
+#endif
+
+    if (credential != computed_credential) throw std::runtime_error("card authentication failed");
+
     r.fileid = 1; r.offset = 0;
     return SOAP_OK;
 }

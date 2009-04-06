@@ -15,6 +15,12 @@ AC_PATH_PROG([XSLTPROC],[xsltproc],[true])
 PKG_CHECK_MODULES([MODULES],[gsoap++ openssl libconfuse],,[
  AC_MSG_ERROR([one of the build dependencies isn't satisfied])
 ])
+PKG_CHECK_MODULES([UUID],[uuid],[have_uuid=true],[have_uuid=false])
+AM_CONDITIONAL([HAVE_UUID],[$have_uuid])
+if $have_uuid ; then
+ AC_DEFINE([HAVE_LIBUUID],,[defined in presence of libuuid])
+ AC_SUBST([UUID_UUID],[uuid])
+fi
 
 AC_PATH_PROG([SOAPCPP2],[soapcpp2],[false])
 test "$SOAPCPP2" = "false" && AC_MSG_ERROR([no soapcpp2 tool, part of gsoap package, found.])

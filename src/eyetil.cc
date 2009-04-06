@@ -9,6 +9,11 @@
 #include <openssl/md5.h>
 #include "eyetil.h"
 
+#include "config.h"
+#ifdef HAVE_LIBUUID
+# include <uuid/uuid.h>
+#endif
+
 binary_t& binary_t::from_hex(const std::string& h) {
     std::string::size_type hs = h.length();
     if(hs&1)
@@ -29,6 +34,18 @@ binary_t& binary_t::from_data(const void *d,size_t s) {
     resize(s);
     std::copy((const unsigned char*)d,(const unsigned char *)d+s,
 	    begin() );
+    return *this;
+}
+
+binary_t& binary_t::make_nonce() {
+#ifdef HAVE_LIBUUID
+    uuid_t uuid;
+    uuid_generate(uuid);
+    from_data((unsigned char*)uuid,sizeof(uuid));
+#else
+    resize(16);
+    std::generate_n(begin(),16,rand);
+#endif /* HAVE_LIBUUID */
     return *this;
 }
 

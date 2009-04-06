@@ -7,3 +7,4 @@ Thanks to:
 
 cdavies of Eye-Fi forums for integrity digest verification algorithm.
 	See http://forums.eye.fi/viewtopic.php?f=4&t=270&p=4074#p4074
+	and session nonce verification patch

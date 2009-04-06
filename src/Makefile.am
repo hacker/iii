@@ -7,7 +7,7 @@ noinst_HEADERS = \
 AM_CPPFLAGS = ${CPPFLAGS_DEBUG} \
 	      -DEYEKIN_CONF_DIR=\"${sysconfdir}/${PACKAGE}\"
 DEFAULT_INCLUDES = -I${top_builddir} -I${builddir} -I${srcdir}
-INCLUDES = ${MODULES_CFLAGS}
+INCLUDES = ${MODULES_CFLAGS} ${UUID_CFLAGS}
 
 iiid_SOURCES = iiid.cc \
 	eyekinfig.cc eyetil.cc \
@@ -15,7 +15,7 @@ iiid_SOURCES = iiid.cc \
 nodist_iiid_SOURCES = \
 	${builddir}/soapC.cpp ${builddir}/soapeyefiService.cpp \
 	COPYING.cc
-iiid_LDADD = ${MODULES_LIBS}
+iiid_LDADD = ${MODULES_LIBS} ${UUID_LIBS}
 
 COPYING.cc: ${top_srcdir}/COPYING
 	echo "const char * COPYING = " >$@ || (rm $@;exit 1)

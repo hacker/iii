@@ -15,6 +15,7 @@ class binary_t : public std::vector<unsigned char> {
 
 	binary_t& from_hex(const std::string& h);
 	binary_t& from_data(const void *d,size_t s);
+	binary_t& make_nonce();
 
 	std::string hex() const;
 	binary_t md5() const;
