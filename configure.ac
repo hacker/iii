@@ -12,9 +12,7 @@ AC_HEADER_STDC
 
 AC_PATH_PROG([XSLTPROC],[xsltproc],[true])
 
-PKG_CHECK_MODULES([MODULES],[gsoap++ openssl libconfuse],,[
- AC_MSG_ERROR([one of the build dependencies isn't satisfied])
-])
+PKG_CHECK_MODULES([MODULES],[gsoap++ openssl libconfuse])
 PKG_CHECK_MODULES([UUID],[uuid],[have_uuid=true],[have_uuid=false])
 AM_CONDITIONAL([HAVE_UUID],[$have_uuid])
 if $have_uuid ; then
