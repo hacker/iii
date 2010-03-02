@@ -8,3 +8,4 @@ soapeyefiService.h
 *.o
 /iiid
 /COPYING.cc
+/iii-extract-riff-chunk

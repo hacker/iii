@@ -1,3 +1,4 @@
+bin_PROGRAMS=iii-extract-riff-chunk
 sbin_PROGRAMS=iiid
 noinst_HEADERS = \
 	eyefi.h \
@@ -16,6 +17,9 @@ nodist_iiid_SOURCES = \
 	${builddir}/soapC.cpp ${builddir}/soapeyefiService.cpp \
 	COPYING.cc
 iiid_LDADD = ${MODULES_LIBS} ${UUID_LIBS}
+
+iii_extract_riff_chunk_SOURCES = iii-extract-riff-chunk.cc
+nodist_iii_extract_riff_chunk_SOURCES = COPYING.cc
 
 COPYING.cc: ${top_srcdir}/COPYING
 	echo "const char * COPYING = " >$@ || (rm $@;exit 1)
