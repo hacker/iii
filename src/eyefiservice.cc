@@ -42,7 +42,7 @@ static bool detached_child() {
 int eyefiService::StartSession(
 	std::string macaddress,std::string cnonce,
 	int transfermode,long transfermodetimestamp,
-	struct rns__StartSessionResponse &r ) {
+	struct rns__StartSessionResponse &r ) try {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
 	    "StartSession request from %s with cnonce=%s, transfermode=%d, transfermodetimestamp=%ld",
@@ -68,6 +68,8 @@ int eyefiService::StartSession(
 	}
     }
     return SOAP_OK;
+}catch(std::runtime_error& e) {
+    syslog(LOG_ERR,"error while processing StartSession: %s",e.what());
 }
 
 int eyefiService::GetPhotoStatus(
