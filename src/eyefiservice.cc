@@ -48,14 +48,15 @@ int eyefiService::StartSession(
 	    "StartSession request from %s with cnonce=%s, transfermode=%d, transfermodetimestamp=%ld",
 	    macaddress.c_str(), cnonce.c_str(), transfermode, transfermodetimestamp );
 #endif
-    r.credential = binary_t(macaddress+cnonce+eyekinfig_t(macaddress).get_upload_key()).md5().hex();
+    eyekinfig_t eyekinfig(macaddress);
+    r.credential = binary_t(macaddress+cnonce+eyekinfig.get_upload_key()).md5().hex();
 
     r.snonce = session_nonce.make_nonce().hex();
     r.transfermode=transfermode;
     r.transfermodetimestamp=transfermodetimestamp;
     r.upsyncallowed=false;
 
-    std::string cmd = eyekinfig_t(macaddress).get_on_start_session();
+    std::string cmd = eyekinfig.get_on_start_session();
     if(!cmd.empty()) {
 	if(detached_child()) {
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
