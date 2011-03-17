@@ -138,7 +138,7 @@ int eyefiService::UploadPhoto(
     std::string td = eyekinfig.get_targetdir();
     tmpdir_t indir(td+"/.incoming.XXXXXX");
 
-    std::string jf;
+    std::string jf,lf;
     binary_t digest, idigest;
 
     for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {
@@ -172,13 +172,23 @@ int eyefiService::UploadPhoto(
 #endif
 
 	    tarchive_t a((*i).ptr,(*i).size);
-	    if(!a.read_next_header())
-		throw std::runtime_error("failed to tarchive_t::read_next_header())");
-	    jf = indir.get_file(a.entry_pathname());
-	    int fd=open(jf.c_str(),O_CREAT|O_WRONLY,0666);
-	    assert(fd>0);
-	    a.read_data_into_fd(fd);
-	    close(fd);
+	    while(a.read_next_header()) {
+		std::string f = indir.get_file(a.entry_pathname());
+		std::string::size_type fl = f.length();
+		if(fl<4) continue;
+		const char *s = f.c_str()+fl-4;
+		if(!strcasecmp(s,".JPG"))
+		    jf = f;
+		else if(!strcasecmp(s,".log"))
+		    lf = f;
+		else continue;
+		int fd=open(f.c_str(),O_CREAT|O_WRONLY,0666);
+		if(fd<0)
+		    throw std::runtime_error(gnu::autosprintf("failed to create output file '%s'",f.c_str()));
+		if(!a.read_data_into_fd(fd))
+		    throw std::runtime_error(gnu::autosprintf("failed to untar file into '%s'",f.c_str()));
+		close(fd);
+	    }
 	}
     }
 
@@ -186,26 +196,30 @@ int eyefiService::UploadPhoto(
     if(digest!=idigest) throw std::runtime_error("integrity digest verification failed");
 
     std::string::size_type ls = jf.rfind('/');
+    // XXX: actually, lack of '/' signifies error here
     std::string jbn = (ls==std::string::npos)?jf:jf.substr(ls+1);
-    std::string tf = td+'/'+jbn;
+    ls = lf.rfind('/');
+    std::string lbn = (ls==std::string::npos)?lf:lf.substr(ls+1);
+    std::string tjf,tlf;
     bool success = false;
-    if(!link(jf.c_str(), tf.c_str())) {
-	unlink(jf.c_str()); success = true;
-    }else{
-	for(int i=1;i<32767;++i) {
-	    tf = (const char*)gnu::autosprintf( "%s/(%05d)%s",
-		    td.c_str(), i, jbn.c_str() );
-	    if(!link(jf.c_str(), tf.c_str())) {
-		unlink(jf.c_str()); success = true;
-		break;
-	    }
+    for(int i=0;i<32767;++i) {
+	const char *fmt = i ? "%1$s/(%3$05d)%2$s" : "%1$s/%2$s";
+	tjf = (const char*)gnu::autosprintf(fmt,td.c_str(),jbn.c_str(),i);
+	if(!lf.empty()) tlf = (const char*)gnu::autosprintf(fmt,td.c_str(),lbn.c_str(),i);
+	if( (!link(jf.c_str(),tjf.c_str())) && (lf.empty()) || !link(lf.c_str(),tlf.c_str()) ) {
+	    unlink(jf.c_str());
+	    if(!lf.empty()) unlink(lf.c_str());
+	    success=true;
+	    break;
 	}
     }
     std::string cmd = eyekinfig.get_on_upload_photo();
     if(success && !cmd.empty()) {
 	if(detached_child()) {
+	    putenv( gnu::autosprintf("EYEFI_UPLOADED_ORIG=%s",jbn.c_str()) );
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
-	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",tf.c_str()) );
+	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",tjf.c_str()) );
+	    if(!lf.empty()) putenv( gnu::autosprintf("EYEFI_LOG=%s",tlf.c_str()) );
 	    char *argv[] = { (char*)"/bin/sh", (char*)"-c", (char*)cmd.c_str(), 0 };
 	    execv("/bin/sh",argv);
 	    syslog(LOG_ERR,"Failed to execute '%s'",cmd.c_str());
