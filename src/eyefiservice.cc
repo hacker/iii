@@ -73,11 +73,13 @@ int eyefiService::StartSession(
 int eyefiService::GetPhotoStatus(
 	std::string credential, std::string macaddress,
 	std::string filename, long filesize, std::string filesignature,
+	int flags,
 	struct rns__GetPhotoStatusResponse &r ) {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
-	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s; session nonce=%s",
-	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), session_nonce.hex().c_str() );
+	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s, flags=%d; session nonce=%s",
+	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), flags,
+	    session_nonce.hex().c_str() );
 #endif
 
     std::string computed_credential = binary_t(macaddress+eyekinfig_t(macaddress).get_upload_key()+session_nonce.hex()).md5().hex();

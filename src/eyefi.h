@@ -27,6 +27,7 @@ struct rns__GetPhotoStatusResponse {
 int efs__GetPhotoStatus(
 	std::string credential, std::string macaddress,
 	std::string filename, long filesize, std::string filesignature,
+	int flags,
 	struct rns__GetPhotoStatusResponse &r );
 
 struct rns__MarkLastPhotoInRollResponse {
