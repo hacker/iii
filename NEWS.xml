@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
+ <version version="0.2" date="March ??th, 2011">
+  <ni>improved compatibility with Geo X2 card</ni>
+  <ni>extract and store .log files supplied for geotagging purpose</ni>
+  <ni>added script for post-processing uploaded photo (sort by exif
+  timestamp)</ni>
+  <ni>added utility to extract chunks from RIFF (video) files to assist in
+  automatic sorting of videos</ni>
+ </version>
  <version version="0.1" date="April 5th, 2009">
   <ni>integrity digest verification</ni>
   <ni>try to create upload directory if it doesn't exist</ni>

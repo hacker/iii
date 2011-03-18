@@ -1,4 +1,4 @@
-AC_INIT([iii], [0.1], [iii-bugs@klever.net])
+AC_INIT([iii], [0.2], [iii-bugs@klever.net])
 AC_CONFIG_SRCDIR([src/iiid.cc])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([dist-bzip2])
