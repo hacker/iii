@@ -1,9 +1,12 @@
-iii (0.1klever1) unstable; urgency=low
+iii (0.2) unstable; urgency=low
 
-  * better nonce generation
-  * session nonce verification based on Chris Davies patch
+  * extract and store .log files supplied for geotagging purpose
+  * added a sample script for geotagging photos based on the log file
+  * improved compatibility with Geo X2 card
+  * added a sample script for sorting uploaded photos based on exif timestamp
+  * added utility to extract chunks from RIFF files
 
- -- Michael Krelin <hacker@klever.net>  Mon, 06 Apr 2009 22:30:08 +0200
+ -- Michael Krelin <hacker@klever.net>  Sat, 19 Mar 2011 17:52:46 +0100
 
 iii (0.1) unstable; urgency=low
 
