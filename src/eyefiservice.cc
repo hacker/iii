@@ -6,7 +6,6 @@
 #include <syslog.h>
 #include <sys/wait.h>
 #include <autosprintf.h>
-#include <openssl/rand.h>
 #include "eyekinfig.h"
 #include "eyetil.h"
 #include "soapeyefiService.h"
