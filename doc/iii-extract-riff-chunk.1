@@ -1,0 +1,79 @@
+.TH iii-extract-riff-chunk 1 "March 19th, 2011" "iii" "Klever Group (http://www.klever.net/)"
+.hla en
+
+.SH NAME
+
+iii-extract-riff-chunk \- utility to extract chunks from RIFF files
+
+.SH SYNOPSYS
+
+\fBiii-extract-riff-chunk\fR
+[\fB-h\fR] [\fB--help\fR] [\fB--usage\fR]
+[\fB-V\fR] [\fB--version\fR]
+[\fB-L\fR] [\fB--license\fR]
+[\fB-1\fR] [\fB--first\fR]
+<avi-file> <chunk-path>
+
+.SH DESCRIPTION
+
+The utility is designed to assist in extracting chunk from RIFF files. The main
+(and only) reason why it was developed is to sort video files created by camera
+by date.
+
+.SH OPTIONS
+
+.TP
+\fB-1\fR, \fB--first\fR
+Stop after extracting the first matching chunk.
+.TP
+\fB-h\fR, \fB--help\fR, \fB--usage\fR
+Display short usage instructions and exit.
+.TP
+\fB-V\fR, \fB--version\fR
+Report version and exit.
+.TP
+\fB-L\fR, \fB--license\fR
+Show licensing terms.
+
+.SH EXAMPLE
+
+The command line invokation
+
+\fBiii-extract-riff-chunk DSC_0001.AVI '/RIFF.AVI /LIST.ncdt/nctg'\fR
+| dd bs=1 skip=82 count=19 2>/dev/null
+
+produces output
+
+YYYY:MM:DD HH:MM:SS
+
+at least for my Nikon D90 recorded AVI files.
+
+.SH AUTHOR
+
+Written by Michael Krelin <hacker@klever.net>
+
+.SH COPYRIGHT
+
+Copyright (c) 2009-2011 Klever Group (http://www.klever.net/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+.SH BUGS
+
+You tell me. Send reports to <iii-bugs@klever.net>

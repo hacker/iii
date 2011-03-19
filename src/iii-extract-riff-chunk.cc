@@ -15,7 +15,7 @@
 
 #define PHEADER \
 	PACKAGE " Version " VERSION "\n" \
-	"Copyright (c) 2009-2010 Klever Group"
+	"Copyright (c) 2009-2011 Klever Group"
 
 typedef uint32_t fourcc_type;
 enum fourcc_value {
