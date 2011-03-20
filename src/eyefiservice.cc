@@ -14,27 +14,18 @@ static binary_t session_nonce;
 
 static bool detached_child() {
     pid_t p = fork();
-    if(p<0) throw std::runtime_error("failed to fork()");
-    if(!p) {
-	p = fork();
-	if(p<0) {
-	    syslog(LOG_ERR,"Failed to re-fork child process");
-	    _exit(-1);
-	}
-	if(!p) {
-	    setsid();
-	    for(int i=getdtablesize();i>=0;--i) close(i);
-	    int i=open("/dev/null",O_RDWR); assert(i==0);
-	    i = dup(i); assert(i==1);
-	    i = dup(i); assert(i==2);
-	    return true;
-	}
-	_exit(0);
+    if(p<0) {
+	syslog(LOG_ERR,"Failed to fork away for hook execution");
+	_exit(-1);
     }
-    int rc;
-    if(waitpid(p,&rc,0)<0) throw std::runtime_error("failed to waitpid()");
-    if(!WIFEXITED(rc)) throw std::runtime_error("error in forked process");
-    if(WEXITSTATUS(rc)) throw std::runtime_error("forked process signalled error");
+    if(!p) {
+	setsid();
+	for(int i=getdtablesize();i>=0;--i) close(i);
+	int i=open("/dev/null",O_RDWR); assert(i==0);
+	i = dup(i); assert(i==1);
+	i = dup(i); assert(i==2);
+	return true;
+    }
     return false;
 }
 
