@@ -1,4 +1,4 @@
-#include <sys/wait.h>
+#include <signal.h>
 #include <stdexcept>
 #include "eyefiworker.h"
 
@@ -10,8 +10,8 @@ eyefiworker::eyefiworker()
 int eyefiworker::run(int port) {
     if(!soap_valid_socket(bind(0,port,5)))
 	throw std::runtime_error("failed to bind()");
+    signal(SIGCHLD,SIG_IGN);
     while(true) {
-	while(waitpid(-1,0,WNOHANG)>0);
 	if(!soap_valid_socket(accept()))
 	    throw std::runtime_error("failed to accept()");
 	pid_t p = fork();
