@@ -43,7 +43,7 @@ The daemon isn't supposed to exit at this point, but, like most executables, it 
 .SH FILES
 
 .TP
-@sysconfdir@/iii/\fBXXXXXXXXXXXX.conf/fR
+@sysconfdir@/iii/\fBXXXXXXXXXXXX.conf\fR
 Upon successfull connection, the daemon reads the configuration from this file,
 where XXXXXXXXXXXX is the macaddress of your eyefi card. You can lookup the mac
 address of your card in your Mac/Windows Settings.xml file. Be sure to remove
