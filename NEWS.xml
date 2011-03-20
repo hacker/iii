@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
- <version version="0.2" date="March ??th, 2011">
+ <version version="0.2" date="March 20th, 2011">
   <ni>extract and store .log files supplied for geotagging purpose</ni>
   <ni>added a sample script for geotagging photos based on the log file</ni>
   <ni>improved compatibility with Geo X2 card</ni>
@@ -8,6 +8,7 @@
   timestamp)</ni>
   <ni>added utility to extract chunks from RIFF (video) files to assist in
   automatic sorting of videos</ni>
+  <ni>minor internal changes</ni>
  </version>
  <version version="0.1" date="April 5th, 2009">
   <ni>integrity digest verification</ni>
