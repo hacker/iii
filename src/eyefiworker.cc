@@ -5,6 +5,7 @@
 eyefiworker::eyefiworker()
     : eyefiService(SOAP_IO_STORE|SOAP_IO_KEEPALIVE) {
 	bind_flags = SO_REUSEADDR; max_keep_alive = 0;
+	socket_flags = MSG_NOSIGNAL;
     }
 
 int eyefiworker::run(int port) {
@@ -17,6 +18,7 @@ int eyefiworker::run(int port) {
 	pid_t p = fork();
 	if(p<0) throw std::runtime_error("failed to fork()");
 	if(!p) {
+	    recv_timeout = 600; send_timeout = 120;
 	    (void)serve();
 	    soap_destroy(this); soap_end(this); soap_done(this);
 	    _exit(0);

@@ -115,6 +115,7 @@ int eyefiService::MarkLastPhotoInRoll(
 	    _exit(-1);
 	}
     }
+    keep_alive = 0;
     return SOAP_OK;
 }
 
