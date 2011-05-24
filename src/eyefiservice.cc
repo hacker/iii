@@ -129,7 +129,7 @@ int eyefiService::UploadPhoto(
     std::string td = eyekinfig.get_targetdir();
     tmpdir_t indir(td+"/.incoming.XXXXXX");
 
-    std::string jf,lf;
+    std::string tf,lf;
     binary_t digest, idigest;
 
     for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {
@@ -155,7 +155,7 @@ int eyefiService::UploadPhoto(
 	    }
 #endif
 
-	    if(!jf.empty()) throw std::runtime_error("already seen tarball");
+	    if(!tf.empty()) throw std::runtime_error("already seen tarball");
 	    if(!digest.empty()) throw std::runtime_error("already have integrity digest");
 	    digest = integrity_digest((*i).ptr,(*i).size,eyekinfig.get_upload_key());
 #ifndef NDEBUG
@@ -168,8 +168,8 @@ int eyefiService::UploadPhoto(
 		std::string::size_type fl = f.length();
 		if(fl<4) continue;
 		const char *s = f.c_str()+fl-4;
-		if(!strcasecmp(s,".JPG"))
-		    jf = f;
+		if(!(strcasecmp(s,".JPG") && strcasecmp(s,".AVI")))
+		    tf = f;
 		else if(!strcasecmp(s,".log"))
 		    lf = f;
 		else continue;
@@ -183,22 +183,22 @@ int eyefiService::UploadPhoto(
 	}
     }
 
-    if(jf.empty()) throw std::runtime_error("haven't seen jpeg file");
+    if(tf.empty()) throw std::runtime_error("haven't seen THE file");
     if(digest!=idigest) throw std::runtime_error("integrity digest verification failed");
 
-    std::string::size_type ls = jf.rfind('/');
+    std::string::size_type ls = tf.rfind('/');
     // XXX: actually, lack of '/' signifies error here
-    std::string jbn = (ls==std::string::npos)?jf:jf.substr(ls+1);
+    std::string tbn = (ls==std::string::npos)?tf:tf.substr(ls+1);
     ls = lf.rfind('/');
     std::string lbn = (ls==std::string::npos)?lf:lf.substr(ls+1);
-    std::string tjf,tlf;
+    std::string ttf,tlf;
     bool success = false;
     for(int i=0;i<32767;++i) {
 	const char *fmt = i ? "%1$s/(%3$05d)%2$s" : "%1$s/%2$s";
-	tjf = (const char*)gnu::autosprintf(fmt,td.c_str(),jbn.c_str(),i);
+	ttf = (const char*)gnu::autosprintf(fmt,td.c_str(),tbn.c_str(),i);
 	if(!lf.empty()) tlf = (const char*)gnu::autosprintf(fmt,td.c_str(),lbn.c_str(),i);
-	if( (!link(jf.c_str(),tjf.c_str())) && (lf.empty()) || !link(lf.c_str(),tlf.c_str()) ) {
-	    unlink(jf.c_str());
+	if( (!link(tf.c_str(),ttf.c_str())) && (lf.empty()) || !link(lf.c_str(),tlf.c_str()) ) {
+	    unlink(tf.c_str());
 	    if(!lf.empty()) unlink(lf.c_str());
 	    success=true;
 	    break;
@@ -207,9 +207,9 @@ int eyefiService::UploadPhoto(
     std::string cmd = eyekinfig.get_on_upload_photo();
     if(success && !cmd.empty()) {
 	if(detached_child()) {
-	    putenv( gnu::autosprintf("EYEFI_UPLOADED_ORIG=%s",jbn.c_str()) );
+	    putenv( gnu::autosprintf("EYEFI_UPLOADED_ORIG=%s",tbn.c_str()) );
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
-	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",tjf.c_str()) );
+	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",ttf.c_str()) );
 	    if(!lf.empty()) putenv( gnu::autosprintf("EYEFI_LOG=%s",tlf.c_str()) );
 	    char *argv[] = { (char*)"/bin/sh", (char*)"-c", (char*)cmd.c_str(), 0 };
 	    execv("/bin/sh",argv);
