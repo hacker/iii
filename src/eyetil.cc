@@ -70,6 +70,20 @@ binary_t binary_t::md5() const {
     return rv;
 }
 
+void md5_digester::init() {
+    if(!MD5_Init(&ctx)) throw std::runtime_error("failed to MD5_Init()");
+}
+void md5_digester::update(const void *d,size_t l) {
+    if(!MD5_Update(&ctx,d,l)) throw std::runtime_error("failed to MD5_Update()");
+}
+binary_t md5_digester::final() {
+    binary_t rv(MD5_DIGEST_LENGTH);
+    if(!MD5_Final((unsigned char*)&(rv.front()), &ctx))
+	throw std::runtime_error("failed to MD5_Final()");
+    return rv;
+}
+
+
 static void make_path_for_template(const std::string& p,mode_t m) {
     struct stat st;
     std::string pp;

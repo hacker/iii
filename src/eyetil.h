@@ -5,6 +5,7 @@
 #include <string>
 #include <archive.h>
 #include <archive_entry.h>
+#include "openssl/md5.h"
 
 class binary_t : public std::vector<unsigned char> {
     public:
@@ -20,6 +21,42 @@ class binary_t : public std::vector<unsigned char> {
 	std::string hex() const;
 	binary_t md5() const;
 };
+
+struct md5_digester {
+    MD5_CTX ctx;
+    md5_digester() { init(); }
+
+    void init();
+    void update(const void *d,size_t l);
+    binary_t final();
+
+    template<typename T>
+    void update(const T& x) { update(&x,sizeof(x)); }
+
+    template<typename T>
+    struct update_iterator : public std::iterator<std::output_iterator_tag,T,void,T*,T&> {
+	md5_digester *d;
+	update_iterator(md5_digester *d_) : d(d_) { }
+	update_iterator(const update_iterator& x) : d(x.d) { }
+
+	update_iterator& operator*() { return *this; }
+	update_iterator& operator++() { return *this; }
+	update_iterator& operator++(int) { return *this; }
+
+	update_iterator& operator=(const T& x) {
+	    d->update(x); return *this;
+	}
+    };
+
+    template<typename T>
+    update_iterator<T> updater() {
+	return update_iterator<T>(this);
+    }
+
+};
+template<> inline void md5_digester::update<binary_t>(const binary_t& x) {
+    update((const unsigned char*)&(x.front()),x.size());
+}
 
 class tmpdir_t {
     public:
