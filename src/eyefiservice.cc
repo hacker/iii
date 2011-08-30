@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <iterator>
+#include <algorithm>
 #include <syslog.h>
 #include <sys/wait.h>
 #include <autosprintf.h>
@@ -168,7 +169,10 @@ int eyefiService::UploadPhoto(
 		std::string::size_type fl = f.length();
 		if(fl<4) continue;
 		const char *s = f.c_str()+fl-4;
-		if(!(strcasecmp(s,".JPG") && strcasecmp(s,".AVI")))
+		static const char *suffixes[] = { ".JPG",".AVI",".MP4",".NEF",".RAW",".TIF" };
+		if(std::find_if(suffixes,suffixes+sizeof(suffixes)/sizeof(*suffixes),
+			    std::not1(std::bind1st(std::ptr_fun(strcasecmp),s)))
+			!= suffixes+sizeof(suffixes)/sizeof(*suffixes))
 		    tf = f;
 		else if(!strcasecmp(s,".log"))
 		    lf = f;
