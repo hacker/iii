@@ -165,13 +165,9 @@ struct block512_t {
 #pragma pack()
 
 binary_t integrity_digest(const void *ptr,size_t size,const std::string& ukey) {
-    binary_t key; key.from_hex(ukey);
-    std::vector<uint16_t> blksums; blksums.reserve(size/sizeof(block512_t));
-    block512_t *db = (block512_t*)ptr,
-	       *de = db + size/sizeof(block512_t);
-    std::transform( db, de, std::back_inserter(blksums), block512_t::tcpcksum );
-    binary_t subject;
-    subject.from_data((void*)&(blksums.front()),blksums.size()*sizeof(uint16_t));
-    std::copy( key.begin(), key.end(), std::back_inserter(subject) );
-    return subject.md5();
+    md5_digester rv;
+    std::transform( (block512_t*)ptr, ((block512_t*)ptr)+size/sizeof(block512_t),
+	    rv.updater<uint16_t>(), block512_t::tcpcksum );
+    rv.update( binary_t(ukey) );
+    return rv.final();
 }
