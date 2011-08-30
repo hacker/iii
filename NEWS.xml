@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
+ <version version="" date="">
+  <ni>optimized integrity digest calculation memory usage</ni>
+  <ni>Extended list of supported file types</ni>
+ </version>
  <version version="0.2" date="March 20th, 2011">
   <ni>extract and store .log files supplied for geotagging purpose</ni>
   <ni>added a sample script for geotagging photos based on the log file</ni>
