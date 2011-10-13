@@ -1,11 +1,7 @@
 #!/usr/bin/make -f
-%:
-	dh $@
 
-build: build-stamp
-build-stamp:
-	sh autogen.sh --version
-	dh build --before configure
-	dh_auto_configure -- --enable-debug
-	dh build --after configure
-	touch $@
+makebuilddir/iii::
+	bash autogen.sh --version
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/autotools.mk

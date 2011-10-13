@@ -2,8 +2,9 @@ Source: iii
 Section: graphics
 Priority: optional
 Maintainer: Michael Krelin <hacker@klever.net>
-Build-Depends: debhelper (>=7), gsoap, libssl-dev, libconfuse-dev, libarchive-dev, gettext
-Standards-Version: 3.8.4
+Build-Depends: debhelper, cdbs, gsoap, libssl-dev, libconfuse-dev, libarchive-dev, gettext, xsltproc, pkg-config
+Standards-Version: 3.9.1
+Homepage: http://kin.klever.net/iii
 
 Package: iii
 Architecture: any
