@@ -169,7 +169,8 @@ int eyefiService::UploadPhoto(
 		std::string::size_type fl = f.length();
 		if(fl<4) continue;
 		const char *s = f.c_str()+fl-4;
-		static const char *suffixes[] = { ".JPG",".AVI",".MP4",".NEF",".RAW",".TIF",".DNG",".CRW", ".RW2" };
+		static const char *suffixes[] = { ".JPG",".AVI",".MP4",".NEF",".RAW",".TIF",".DNG",".CRW",
+		    ".RW2",".CR2" };
 		if(std::find_if(suffixes,suffixes+sizeof(suffixes)/sizeof(*suffixes),
 			    std::not1(std::bind1st(std::ptr_fun(strcasecmp),s)))
 			!= suffixes+sizeof(suffixes)/sizeof(*suffixes))
