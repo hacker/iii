@@ -5,7 +5,15 @@
 eyefiworker::eyefiworker()
     : eyefiService(SOAP_IO_STORE|SOAP_IO_KEEPALIVE) {
 	bind_flags = SO_REUSEADDR; max_keep_alive = 0;
-	socket_flags = MSG_NOSIGNAL;
+	socket_flags =
+#if defined(MSG_NOSIGNAL)
+	    MSG_NOSIGNAL
+#elif defined(SO_NOSIGPIPE)
+	    SO_NOSIGPIPE
+#else
+#error Something is wrong with sigpipe prevention on the platform
+#endif
+	    ;
     }
 
 int eyefiworker::run(int port) {
