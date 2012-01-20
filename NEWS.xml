@@ -3,6 +3,7 @@
  <version version="" date="">
   <ni>optimized integrity digest calculation memory usage</ni>
   <ni>report the lack of config file for the card</ni>
+  <ni>do some startup checks for config files</ni>
   <ni>Extended list of supported file types</ni>
   <ni>minor bugfixes</ni>
  </version>

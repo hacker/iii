@@ -1,5 +1,7 @@
 #include <syslog.h>
 #include <getopt.h>
+#include <sys/stat.h>
+#include <glob.h>
 #include <iostream>
 #include <cassert>
 #include <stdexcept>
@@ -73,6 +75,15 @@ int main(int argc,char **argv) try {
 	ident = *argv;
     openlog(ident,LOG_PERROR|LOG_PID,LOG_DAEMON);
     syslog(LOG_INFO,"Starting iii eye-fi manager");
+
+    struct stat st;
+    if(stat(EYEKIN_CONF_DIR,&st) || !S_ISDIR(st.st_mode))
+	syslog(LOG_WARNING,"configuration directory '%s' does not exist or is not a directory",EYEKIN_CONF_DIR);
+    glob_t g; int rg = glob(EYEKIN_CONF_DIR"/????????????.conf",GLOB_NOSORT,NULL,&g);
+    if(rg || !g.gl_pathc)
+	syslog(LOG_WARNING,"I see nothing resembling a card config in '%s'",EYEKIN_CONF_DIR);
+    else
+	globfree(&g);
 
     eyefiworker().run(port);
 
