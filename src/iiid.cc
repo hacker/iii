@@ -53,7 +53,7 @@ int main(int argc,char **argv) try {
 		exit(0);
 		break;
 	    case 'p':
-		port = strtol(optarg,0,0);
+		port = 0xffff&strtol(optarg,0,0);
 		if(errno) {
 		    std::cerr << "Failed to parse port number" << std::endl;
 		    exit(1);

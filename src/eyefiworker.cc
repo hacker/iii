@@ -16,8 +16,8 @@ eyefiworker::eyefiworker()
 	    ;
     }
 
-int eyefiworker::run(int port) {
-    if(!soap_valid_socket(bind(0,port,64)))
+int eyefiworker::run(int bindport) {
+    if(!soap_valid_socket(bind(0,bindport,64)))
 	throw std::runtime_error("failed to bind()");
     signal(SIGCHLD,SIG_IGN);
     while(true) {

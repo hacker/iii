@@ -63,5 +63,5 @@ std::string eyekinfig_t::get_on_mark_last_photo_in_roll() {
 
 int eyekinfig_t::get_umask() {
     assert(cfg);
-    return cfg_getint(cfg,"umask");
+    return 0777&cfg_getint(cfg,"umask");
 }

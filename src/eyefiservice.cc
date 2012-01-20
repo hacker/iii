@@ -91,7 +91,7 @@ int eyefiService::GetPhotoStatus(
 
 int eyefiService::MarkLastPhotoInRoll(
 	std::string macaddress, int mergedelta,
-	struct rns__MarkLastPhotoInRollResponse &r ) {
+	struct rns__MarkLastPhotoInRollResponse&/* r */ ) {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
 	    "MarkLastPhotoInRoll request from %s with mergedelta=%d",

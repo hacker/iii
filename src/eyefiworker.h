@@ -8,7 +8,7 @@ class eyefiworker : public eyefiService {
 
 	eyefiworker();
 
-	int run(int port);
+	int run(int port) __attribute__ ((noreturn));
 
 };
 

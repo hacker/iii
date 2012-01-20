@@ -18,14 +18,14 @@ binary_t& binary_t::from_hex(const std::string& h) {
     std::string::size_type hs = h.length();
     if(hs&1)
 	throw std::runtime_error("odd number of characters in hexadecimal number");
-    int rvs = hs>>1;
+    size_t rvs = hs>>1;
     resize(rvs);
     const unsigned char *hp = (const unsigned char*)h.data();
     iterator oi=begin();
     char t[3] = { 0,0,0 };
-    for(int i=0;i<rvs;++i) {
+    for(size_t i=0;i<rvs;++i) {
 	t[0]=*(hp++); t[1]=*(hp++);
-	*(oi++) = strtol(t,0,16);
+	*(oi++) = static_cast<binary_t::value_type>(0xff&strtol(t,0,16));
     }
     return *this;
 }
@@ -54,7 +54,7 @@ std::string binary_t::hex() const {
     rv.reserve((size()<<1)+1);
     char t[3] = {0,0,0};
     for(const_iterator i=begin(),ie=end();i!=ie;++i) {
-	int rc = snprintf(t,sizeof(t),"%02x",*i);
+	size_t rc = snprintf(t,sizeof(t),"%02x",*i);
 	assert(rc<sizeof(t));
 	rv += t;
     }
@@ -158,7 +158,7 @@ struct block512_t {
     static uint16_t tcpcksum(block512_t& data) {
 	uint32_t sum = std::accumulate(data.data,data.data+words,0);
 	while(uint32_t hw = sum>>16) sum = (sum&0xffff)+hw;
-	return ~sum;
+	return 0xffff&~sum;
     }
 
 };
