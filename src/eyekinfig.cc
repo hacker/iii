@@ -5,7 +5,7 @@
 
 #include "config.h"
 
-eyekinfig_t::eyekinfig_t(const std::string& ma) : macaddress(ma) {
+eyekinfig_t::eyekinfig_t(const std::string& ma) : macaddress(ma), cfg(0) {
     try {
 	static cfg_opt_t opts[] = {
 	    CFG_STR((char*)"targetdir",(char*)"/var/lib/" PACKAGE "/%s",CFGF_NONE),
