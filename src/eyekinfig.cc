@@ -5,8 +5,8 @@
 
 #include "config.h"
 
-eyekinfig_t::eyekinfig_t(const std::string& ma)
-    : macaddress(ma) {
+eyekinfig_t::eyekinfig_t(const std::string& ma) : macaddress(ma) {
+    try {
 	static cfg_opt_t opts[] = {
 	    CFG_STR((char*)"targetdir",(char*)"/var/lib/" PACKAGE "/%s",CFGF_NONE),
 	    CFG_STR((char*)"uploadkey",(char*)"",CFGF_NONE),
@@ -20,17 +20,19 @@ eyekinfig_t::eyekinfig_t(const std::string& ma)
 	if(!cfg)
 	    throw std::runtime_error("failed to cfg_init()");
 	std::string::size_type ls = macaddress.rfind('/');
-	if(cfg_parse(cfg,gnu::autosprintf(
-			EYEKIN_CONF_DIR "/%s.conf",
-			(ls==std::string::npos)
-			? macaddress.c_str()
-			: macaddress.substr(ls+1).c_str()
-		)) ==CFG_PARSE_ERROR) {
-	    if(cfg) cfg_free(cfg);
-	    cfg=0;
-	    throw std::runtime_error("failed to cfg_parse()");
+	std::string cf = gnu::autosprintf( EYEKIN_CONF_DIR "/%s.conf",
+		macaddress.c_str()+((ls==std::string::npos)?0:ls+1) );
+	int r = cfg_parse(cfg,cf.c_str());
+	if(r != CFG_SUCCESS) {
+	    cfg_free(cfg); cfg=0;
+	    if(CFG_FILE_ERROR) throw std::runtime_error(gnu::autosprintf("failed to open configuration file '%s'",cf.c_str()));
+	    throw std::runtime_error(gnu::autosprintf("failed to parse configuration file '%s'",cf.c_str()));
 	}
+    }catch(...) {
+	if(cfg) cfg_free(cfg), cfg=0;
+	throw;
     }
+}
 
 eyekinfig_t::~eyekinfig_t() {
     if(cfg) cfg_free(cfg);
