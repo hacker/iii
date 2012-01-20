@@ -127,6 +127,12 @@ int eyefiService::UploadPhoto(
 	    macaddress.c_str(), fileid, filename.c_str(), filesize,
 	    filesignature.c_str(), encryption.c_str(), flags );
 #endif
+    std::string::size_type fnl=filename.length();
+    if(fnl<sizeof(".tar") || strncmp(filename.c_str()+fnl-sizeof(".tar")+sizeof(""),".tar",sizeof(".tar")))
+	throw std::runtime_error(gnu::autosprintf("honestly, I expected the tarball coming here, not '%s'",filename.c_str()));
+    std::string the_file(filename,0,fnl-sizeof(".tar")+sizeof(""));
+    std::string the_log = the_file+".log";
+
     eyekinfig_t eyekinfig(macaddress);
 
     umask(eyekinfig.get_umask());
@@ -169,18 +175,9 @@ int eyefiService::UploadPhoto(
 
 	    tarchive_t a((*i).ptr,(*i).size);
 	    while(a.read_next_header()) {
-		std::string f = indir.get_file(a.entry_pathname());
-		std::string::size_type fl = f.length();
-		if(fl<4) continue;
-		const char *s = f.c_str()+fl-4;
-		static const char *suffixes[] = { ".JPG",".AVI",".MP4",".NEF",".RAW",".TIF",".DNG",".CRW",
-		    ".RW2",".CR2" };
-		if(std::find_if(suffixes,suffixes+sizeof(suffixes)/sizeof(*suffixes),
-			    std::not1(std::bind1st(std::ptr_fun(strcasecmp),s)))
-			!= suffixes+sizeof(suffixes)/sizeof(*suffixes))
-		    tf = f;
-		else if(!strcasecmp(s,".log"))
-		    lf = f;
+		std::string ep = a.entry_pathname(), f = indir.get_file(ep);
+		if(ep==the_file) tf = f;
+		else if(ep==the_log) lf = f;
 		else continue;
 		int fd=open(f.c_str(),O_CREAT|O_WRONLY,0666);
 		if(fd<0)
