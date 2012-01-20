@@ -10,7 +10,7 @@ struct rns__StartSessionResponse {
     std::string credential;
     std::string snonce;
     int transfermode;
-    unsigned int transfermodetimestamp;
+    long transfermodetimestamp;
     bool upsyncallowed;
 };
 
