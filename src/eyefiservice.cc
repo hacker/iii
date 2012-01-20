@@ -62,6 +62,7 @@ int eyefiService::StartSession(
     return SOAP_OK;
 }catch(std::runtime_error& e) {
     syslog(LOG_ERR,"error while processing StartSession: %s",e.what());
+    return soap_receiverfault(e.what(),0);
 }
 
 int eyefiService::GetPhotoStatus(
