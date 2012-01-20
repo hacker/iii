@@ -202,7 +202,7 @@ int eyefiService::UploadPhoto(
 	const char *fmt = i ? "%1$s/(%3$05d)%2$s" : "%1$s/%2$s";
 	ttf = (const char*)gnu::autosprintf(fmt,td.c_str(),tbn.c_str(),i);
 	if(!lf.empty()) tlf = (const char*)gnu::autosprintf(fmt,td.c_str(),lbn.c_str(),i);
-	if( (!link(tf.c_str(),ttf.c_str())) && (lf.empty()) || !link(lf.c_str(),tlf.c_str()) ) {
+	if( (!link(tf.c_str(),ttf.c_str())) && (lf.empty() || !link(lf.c_str(),tlf.c_str())) ) {
 	    unlink(tf.c_str());
 	    if(!lf.empty()) unlink(lf.c_str());
 	    success=true;
