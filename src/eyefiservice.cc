@@ -30,6 +30,12 @@ static bool detached_child() {
     return false;
 }
 
+static int E(eyefiService* efs,const char *c,const std::exception& e) {
+    efs->keep_alive=0;
+    syslog(LOG_ERR,"error while processing %s: %s",c,e.what());
+    return efs->soap_receiverfault(gnu::autosprintf("error processing %s",c),0);
+}
+
 int eyefiService::StartSession(
 	std::string macaddress,std::string cnonce,
 	int transfermode,long transfermodetimestamp,
@@ -60,16 +66,13 @@ int eyefiService::StartSession(
 	}
     }
     return SOAP_OK;
-}catch(std::runtime_error& e) {
-    syslog(LOG_ERR,"error while processing StartSession: %s",e.what());
-    return soap_receiverfault(e.what(),0);
-}
+}catch(const std::exception& e) { return E(this,"StartSession",e); }
 
 int eyefiService::GetPhotoStatus(
 	std::string credential, std::string macaddress,
 	std::string filename, long filesize, std::string filesignature,
 	int flags,
-	struct rns__GetPhotoStatusResponse &r ) {
+	struct rns__GetPhotoStatusResponse &r ) try {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
 	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s, flags=%d; session nonce=%s",
@@ -87,11 +90,11 @@ int eyefiService::GetPhotoStatus(
 
     r.fileid = 1; r.offset = 0;
     return SOAP_OK;
-}
+}catch(const std::exception& e) { return E(this,"GetPhotoStatus",e); }
 
 int eyefiService::MarkLastPhotoInRoll(
 	std::string macaddress, int mergedelta,
-	struct rns__MarkLastPhotoInRollResponse&/* r */ ) {
+	struct rns__MarkLastPhotoInRollResponse&/* r */ ) try {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
 	    "MarkLastPhotoInRoll request from %s with mergedelta=%d",
@@ -110,13 +113,13 @@ int eyefiService::MarkLastPhotoInRoll(
     }
     keep_alive = 0;
     return SOAP_OK;
-}
+}catch(const std::exception& e) { return E(this,"MarkLastPhotoInRoll",e); }
 
 int eyefiService::UploadPhoto(
 	int fileid, std::string macaddress,
 	std::string filename, long filesize, std::string filesignature,
 	std::string encryption, int flags,
-	struct rns__UploadPhotoResponse& r ) {
+	struct rns__UploadPhotoResponse& r ) try {
 #ifndef NDEBUG
     syslog(LOG_DEBUG,
 	    "UploadPhoto request from %s with fileid=%d, filename=%s, filesize=%ld,"
@@ -226,4 +229,4 @@ int eyefiService::UploadPhoto(
 
     r.success = true;
     return SOAP_OK;
-}
+}catch(const std::exception& e) { return E(this,"UploadPhoto",e); }
