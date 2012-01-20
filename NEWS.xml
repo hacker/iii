@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
  <version version="" date="">
+  <ni>supports whatever file type card is willing to send now</ni>
   <ni>optimized integrity digest calculation memory usage</ni>
   <ni>report the lack of config file for the card</ni>
   <ni>do some startup checks for config files</ni>
-  <ni>Extended list of supported file types</ni>
   <ni>minor bugfixes</ni>
  </version>
  <version version="0.2" date="March 20th, 2011">
