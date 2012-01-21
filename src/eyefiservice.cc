@@ -33,7 +33,7 @@ static bool detached_child() {
 static int E(eyefiService* efs,const char *c,const std::exception& e) {
     efs->keep_alive=0;
     syslog(LOG_ERR,"error while processing %s: %s",c,e.what());
-    return efs->soap_receiverfault(gnu::autosprintf("error processing %s",c),0);
+    return soap_sender_fault(efs,gnu::autosprintf("error processing %s",c),0);
 }
 
 int eyefiService::StartSession(
