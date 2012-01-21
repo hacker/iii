@@ -42,11 +42,11 @@ END {
 }
 ')"
 
-[[ -z "$APS" ]] && { echo "no access points" ; exit ; }
+[[ -z "$APS" ]] && { echo "no access points" ; return 2>/dev/null || exit ; }
 WL="$(wps_locate "$APS")"
-[[ -z "$WL" ]] && { echo "couldn't find location" ; exit ; }
+[[ -z "$WL" ]] && { echo "couldn't find location" ; return 2>/dev/null || exit ; }
 eval "$WL"
-[[ -z "$wl_latitude" || -z "$wl_longitude" || -z "$wl_hpe" ]] && { echo "invalid location ($WL)"; exit; }
+[[ -z "$wl_latitude" || -z "$wl_longitude" || -z "$wl_hpe" ]] && { echo "invalid location ($WL)"; return 2>/dev/null || exit; }
 [[ "${wl_latitude:0:1}" = '-' ]] && wl_latitude="${wl_latitude:1}" wl_latitude_ref=S || wl_latitude_ref=N
 [[ "${wl_longitude:0:1}" = '-' ]] && wl_longitude="${wl_longitude:1}" wl_longitude_ref=W || wl_longitude_ref=E
 exiftool -GPSLatitude="$wl_latitude" -GPSLongitude="$wl_longitude" -GPSLatitudeRef=$wl_latitude_ref -GPSLongitudeRef=$wl_longitude_ref -GPSVersionID=0.0.2.2 -GPSProcessingMethod=WLAN "$JPG"
