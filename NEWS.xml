@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
- <version version="" date="">
+ <version version="0.3" date="January 21st, 2012">
   <ni>supports whatever file type card is willing to send now</ni>
   <ni>optimized integrity digest calculation memory usage</ni>
   <ni>report the lack of config file for the card</ni>
   <ni>do some startup checks for config files</ni>
-  <ni>minor bugfixes</ni>
+  <ni>minor bugfixes and improvements</ni>
  </version>
  <version version="0.2" date="March 20th, 2011">
   <ni>extract and store .log files supplied for geotagging purpose</ni>
