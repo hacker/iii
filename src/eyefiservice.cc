@@ -40,11 +40,9 @@ int eyefiService::StartSession(
 	std::string macaddress,std::string cnonce,
 	int transfermode,long transfermodetimestamp,
 	struct rns__StartSessionResponse &r ) try {
-#ifndef NDEBUG
-    syslog(LOG_DEBUG,
+    syslog(LOG_INFO,
 	    "StartSession request from %s with cnonce=%s, transfermode=%d, transfermodetimestamp=%ld",
 	    macaddress.c_str(), cnonce.c_str(), transfermode, transfermodetimestamp );
-#endif
     eyekinfig_t eyekinfig(macaddress);
     r.credential = binary_t(macaddress+cnonce+eyekinfig.get_upload_key()).md5().hex();
 
@@ -73,12 +71,10 @@ int eyefiService::GetPhotoStatus(
 	std::string filename, long filesize, std::string filesignature,
 	int flags,
 	struct rns__GetPhotoStatusResponse &r ) try {
-#ifndef NDEBUG
-    syslog(LOG_DEBUG,
+    syslog(LOG_INFO,
 	    "GetPhotoStatus request from %s with credential=%s, filename=%s, filesize=%ld, filesignature=%s, flags=%d; session nonce=%s",
 	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), flags,
 	    session_nonce.hex().c_str() );
-#endif
 
     std::string computed_credential = binary_t(macaddress+eyekinfig_t(macaddress).get_upload_key()+session_nonce.hex()).md5().hex();
 
@@ -95,11 +91,9 @@ int eyefiService::GetPhotoStatus(
 int eyefiService::MarkLastPhotoInRoll(
 	std::string macaddress, int mergedelta,
 	struct rns__MarkLastPhotoInRollResponse&/* r */ ) try {
-#ifndef NDEBUG
-    syslog(LOG_DEBUG,
+    syslog(LOG_INFO,
 	    "MarkLastPhotoInRoll request from %s with mergedelta=%d",
 	    macaddress.c_str(), mergedelta );
-#endif
     std::string cmd = eyekinfig_t(macaddress).get_on_mark_last_photo_in_roll();
     if(!cmd.empty()) {
 	if(detached_child()) {
@@ -120,13 +114,11 @@ int eyefiService::UploadPhoto(
 	std::string filename, long filesize, std::string filesignature,
 	std::string encryption, int flags,
 	struct rns__UploadPhotoResponse& r ) try {
-#ifndef NDEBUG
-    syslog(LOG_DEBUG,
+    syslog(LOG_INFO,
 	    "UploadPhoto request from %s with fileid=%d, filename=%s, filesize=%ld,"
 	    " filesignature=%s, encryption=%s, flags=%04X",
 	    macaddress.c_str(), fileid, filename.c_str(), filesize,
 	    filesignature.c_str(), encryption.c_str(), flags );
-#endif
     std::string::size_type fnl=filename.length();
     if(fnl<sizeof(".tar") || strncmp(filename.c_str()+fnl-sizeof(".tar")+sizeof(""),".tar",sizeof(".tar")))
 	throw std::runtime_error(gnu::autosprintf("honestly, I expected the tarball coming here, not '%s'",filename.c_str()));
