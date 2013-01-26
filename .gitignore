@@ -9,8 +9,6 @@ Makefile.in
 /configure
 /stamp-h1
 /INSTALL
-/depcomp
-/install-sh
-/missing
 /NEWS
 TAGS
+/aux.d
