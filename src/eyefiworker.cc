@@ -1,6 +1,9 @@
 #include <signal.h>
 #include <stdexcept>
 #include "eyefiworker.h"
+#ifdef HAVE_SQLITE
+# include "sqlite3.h"
+#endif
 
 eyefiworker::eyefiworker()
     : eyefiService(SOAP_IO_STORE|SOAP_IO_KEEPALIVE) {
@@ -17,6 +20,9 @@ eyefiworker::eyefiworker()
     }
 
 int eyefiworker::run(int bindport) {
+#ifdef HAVE_SQLITE
+    sqlite3_initialize();
+#endif
     if(!soap_valid_socket(bind(0,bindport,64)))
 	throw std::runtime_error("failed to bind()");
     signal(SIGCHLD,SIG_IGN);

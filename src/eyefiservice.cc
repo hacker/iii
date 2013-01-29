@@ -10,8 +10,25 @@
 #include "eyekinfig.h"
 #include "eyetil.h"
 #include "soapeyefiService.h"
+#ifdef HAVE_SQLITE
+# include "iiidb.h"
+#endif
 
 static binary_t session_nonce;
+#ifdef HAVE_SQLITE
+    static struct {
+	std::string filesignature;
+	long filesize;
+	std::string filename;
+	inline void reset() { filesignature.erase(); filename.erase(); filesize=0; }
+	inline void set(const std::string n,const std::string sig,long siz) {
+	    filename = n; filesignature = sig; filesize = siz;
+	}
+	inline bool is(const std::string n,const std::string sig,long siz) {
+	    return filesize==siz && filename==n && filesignature==sig;
+	}
+    }   already;
+#endif /* HAVE_SQLITE */
 
 static bool detached_child() {
     pid_t p = fork();
@@ -76,7 +93,8 @@ int eyefiService::GetPhotoStatus(
 	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), flags,
 	    session_nonce.hex().c_str() );
 
-    std::string computed_credential = binary_t(macaddress+eyekinfig_t(macaddress).get_upload_key()+session_nonce.hex()).md5().hex();
+    eyekinfig_t eyekinfig(macaddress);
+    std::string computed_credential = binary_t(macaddress+eyekinfig.get_upload_key()+session_nonce.hex()).md5().hex();
 
 #ifndef NDEBUG
     syslog(LOG_DEBUG, " computed credential=%s", computed_credential.c_str());
@@ -84,7 +102,25 @@ int eyefiService::GetPhotoStatus(
 
     if (credential != computed_credential) throw std::runtime_error("card authentication failed");
 
-    r.fileid = 1; r.offset = 0;
+#ifdef HAVE_SQLITE
+    iiidb_t D(eyekinfig);
+    seclude::stmt_t S = D.prepare(
+	    "SELECT fileid FROM photo"
+	    " WHERE mac=:mac AND filename=:filename"
+	    "  AND filesize=:filesize AND filesignature=:filesignature"
+    ).bind(":mac",macaddress)
+     .bind(":filename",filename).bind(":filesize",filesize)
+     .bind(":filesignature",filesignature);
+    if(!S.step()) {
+	r.fileid = 1; r.offset = 0;
+    }else{
+	r.fileid = S.column<long>(0);
+	r.offset = filesize;
+	already.set(filename,filesignature,filesize);
+    }
+#else /* HAVE_SQLITE */
+    r.fileid=1, r.offset=0;
+#endif /* HAVE_SQLITE */
     return SOAP_OK;
 }catch(const std::exception& e) { return E(this,"GetPhotoStatus",e); }
 
@@ -134,6 +170,9 @@ int eyefiService::UploadPhoto(
 
     std::string tf,lf;
     binary_t digest, idigest;
+#ifdef HAVE_SQLITE
+    bool beenthere = false;
+#endif
 
     for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {
 #ifndef NDEBUG
@@ -164,6 +203,13 @@ int eyefiService::UploadPhoto(
 #ifndef NDEBUG
 	    syslog(LOG_DEBUG," computed integrity digest=%s", digest.hex().c_str());
 #endif
+#ifdef HAVE_SQLITE
+	    if(!(*i).size) {
+		if(!already.is(filename,filesignature,filesize))
+		    throw std::runtime_error("got zero-length upload for unknown file");
+		beenthere = true; continue;
+	    }
+#endif
 
 	    tarchive_t a((*i).ptr,(*i).size);
 	    while(a.read_next_header()) {
@@ -180,6 +226,13 @@ int eyefiService::UploadPhoto(
 	    }
 	}
     }
+
+#ifdef HAVE_SQLITE
+    if(beenthere) {
+	r.success=true;
+	return SOAP_OK;
+    }
+#endif
 
     if(tf.empty()) throw std::runtime_error("haven't seen THE file");
     if(digest!=idigest) throw std::runtime_error("integrity digest verification failed");
@@ -203,8 +256,24 @@ int eyefiService::UploadPhoto(
 	}
     }
     std::string cmd = eyekinfig.get_on_upload_photo();
-    if(success && !cmd.empty()) {
-	if(detached_child()) {
+    if(success) {
+#ifdef HAVE_SQLITE
+	{
+	    iiidb_t D(eyekinfig);
+	    D.prepare(
+		    "INSERT INTO photo"
+		    " (ctime,mac,fileid,filename,filesize,filesignature,encryption,flags)"
+		    " VALUES"
+		    " (:ctime,:mac,:fileid,:filename,:filesize,:filesignature,:encryption,:flags)"
+	    ).bind(":ctime",time(0))
+	     .bind(":mac",macaddress)
+	     .bind(":fileid",fileid).bind(":filename",filename)
+	     .bind(":filesize",filesize).bind(":filesignature",filesignature)
+	     .bind(":encryption",encryption).bind(":flags",flags)
+	     .step();
+	}
+#endif /* HAVE_SQLITE */
+	if((!cmd.empty()) && detached_child()) {
 	    putenv( gnu::autosprintf("EYEFI_UPLOADED_ORIG=%s",tbn.c_str()) );
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
 	    putenv( gnu::autosprintf("EYEFI_UPLOADED=%s",ttf.c_str()) );

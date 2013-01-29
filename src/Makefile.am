@@ -3,12 +3,13 @@ sbin_PROGRAMS=iiid
 noinst_HEADERS = \
 	eyefi.h \
 	eyekinfig.h eyetil.h \
-	eyefiworker.h
+	eyefiworker.h iiidb.h \
+	seclude.h
 
 AM_CPPFLAGS = ${CPPFLAGS_DEBUG} \
 	      -DEYEKIN_CONF_DIR=\"${sysconfdir}/${PACKAGE}\"
 DEFAULT_INCLUDES = -I${top_builddir} -I${builddir} -I${srcdir}
-INCLUDES = ${MODULES_CFLAGS} ${UUID_CFLAGS}
+INCLUDES = ${MODULES_CFLAGS} ${UUID_CFLAGS} ${SQLITE_CFLAGS}
 
 iiid_SOURCES = iiid.cc \
 	eyekinfig.cc eyetil.cc \
@@ -16,7 +17,7 @@ iiid_SOURCES = iiid.cc \
 nodist_iiid_SOURCES = \
 	${builddir}/soapC.cpp ${builddir}/soapeyefiService.cpp \
 	COPYING.cc
-iiid_LDADD = ${MODULES_LIBS} ${UUID_LIBS}
+iiid_LDADD = ${MODULES_LIBS} ${UUID_LIBS} ${SQLITE_LIBS}
 
 iii_extract_riff_chunk_SOURCES = iii-extract-riff-chunk.cc
 nodist_iii_extract_riff_chunk_SOURCES = COPYING.cc

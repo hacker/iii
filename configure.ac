@@ -21,6 +21,9 @@ if $have_uuid ; then
  AC_SUBST([UUID_UUID],[uuid])
 fi
 
+PKG_CHECK_MODULES([SQLITE],[sqlite3],[have_sqlite=true],[have_sqlite=false])
+$have_sqlite && AC_DEFINE([HAVE_SQLITE],,[defined in presence of libsqlite3])
+
 AC_PATH_PROG([SOAPCPP2],[soapcpp2],[false])
 test "$SOAPCPP2" = "false" && AC_MSG_ERROR([no soapcpp2 tool, part of gsoap package, found.])
 
