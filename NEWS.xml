@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <news>
+ <version version="0.4" date="">
+  <ni>maintain persistent photo status to help fighting duplicate uploads.</ni>
+ </version>
  <version version="0.3" date="January 21st, 2012">
   <ni>supports whatever file type card is willing to send now</ni>
   <ni>optimized integrity digest calculation memory usage</ni>
