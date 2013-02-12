@@ -1,4 +1,8 @@
 #include <signal.h>
+#ifndef NDEBUG
+# include <sys/resource.h>
+#endif
+#include <syslog.h>
 #include <stdexcept>
 #include "eyefiworker.h"
 #ifdef HAVE_SQLITE
@@ -35,6 +39,14 @@ int eyefiworker::run(int bindport) {
 	    recv_timeout = 600; send_timeout = 120;
 	    (void)serve();
 	    soap_destroy(this); soap_end(this); soap_done(this);
+#ifndef NDEBUG
+	    struct rusage ru;
+	    if(getrusage(RUSAGE_SELF,&ru)) {
+		syslog(LOG_NOTICE,"Failed to getrusage(): %d",errno);
+	    }else{
+		syslog(LOG_INFO,"maxrss: %ld\n",ru.ru_maxrss);
+	    }
+#endif /* NDEBUG */
 	    _exit(0);
 	}
 	close(socket); socket = SOAP_INVALID_SOCKET;
