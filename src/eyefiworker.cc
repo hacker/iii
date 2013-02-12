@@ -31,6 +31,8 @@ eyefiworker::eyefiworker()
 #endif
 	    ;
     }
+eyefiworker::~eyefiworker() {
+}
 
 int eyefiworker::run(int bindport) {
 #ifdef HAVE_SQLITE
@@ -56,7 +58,7 @@ int eyefiworker::run(int bindport) {
 		syslog(LOG_INFO,"maxrss: %ld\n",ru.ru_maxrss);
 	    }
 #endif /* NDEBUG */
-	    _exit(0);
+	    throw throwable_exit(0);
 	}
 	close(socket); socket = SOAP_INVALID_SOCKET;
     }

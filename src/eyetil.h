@@ -7,6 +7,11 @@
 #include <archive_entry.h>
 #include "openssl/md5.h"
 
+struct throwable_exit {
+    int rc;
+    throwable_exit(int rc_) : rc(rc_) { }
+};
+
 class binary_t : public std::vector<unsigned char> {
     public:
 	binary_t() { }

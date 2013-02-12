@@ -89,7 +89,9 @@ int main(int argc,char **argv) try {
 
     closelog();
     return 0;
-} catch(std::exception& e) {
+} catch(const throwable_exit& e) {
+    return e.rc;
+} catch(const std::exception& e) {
     syslog(LOG_CRIT,"Exiting iii daemon, because of error condition");
     syslog(LOG_CRIT,"Exception: %s",e.what());
     return 1;

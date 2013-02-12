@@ -7,6 +7,7 @@ class eyefiworker : public eyefiService {
     public:
 
 	eyefiworker();
+	~eyefiworker();
 
 	int run(int port) __attribute__ ((noreturn));
 
