@@ -30,14 +30,14 @@ eyefiworker::eyefiworker()
 #error Something is wrong with sigpipe prevention on the platform
 #endif
 	    ;
+#ifdef HAVE_SQLITE
+    sqlite3_initialize();
+#endif
     }
 eyefiworker::~eyefiworker() {
 }
 
 int eyefiworker::run(int bindport) {
-#ifdef HAVE_SQLITE
-    sqlite3_initialize();
-#endif
     if(!soap_valid_socket(bind(0,bindport,64)))
 	throw std::runtime_error("failed to bind()");
     signal(SIGCHLD,SIG_IGN);
