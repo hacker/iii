@@ -7,13 +7,14 @@ noinst_HEADERS = \
 	seclude.h
 
 AM_CPPFLAGS = ${CPPFLAGS_DEBUG} \
-	      -DEYEKIN_CONF_DIR=\"${sysconfdir}/${PACKAGE}\"
+	      -DEYEKIN_CONF_DIR=\"${sysconfdir}/${PACKAGE}\" \
+	      -DWITH_PURE_VIRTUAL
 DEFAULT_INCLUDES = -I${top_builddir} -I${builddir} -I${srcdir}
 INCLUDES = ${MODULES_CFLAGS} ${UUID_CFLAGS} ${SQLITE_CFLAGS}
 
 iiid_SOURCES = iiid.cc \
 	eyekinfig.cc eyetil.cc \
-	eyefiservice.cc eyefiworker.cc
+	eyefiworker.cc
 nodist_iiid_SOURCES = \
 	${builddir}/soapC.cpp ${builddir}/soapeyefiService.cpp \
 	COPYING.cc
