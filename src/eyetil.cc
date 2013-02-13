@@ -152,13 +152,13 @@ std::string tmpdir_t::get_file(const std::string& f) {
 	);
 }
 
-tarchive_t::tarchive_t(void *p,size_t s) : a(archive_read_new()), e(0) {
+tarchive_t::tarchive_t(const char *fn) : a(archive_read_new()), e(0) {
     if(!a) throw std::runtime_error("failed to archive_read_new()");
     if(archive_read_support_format_tar(a)) {
 	archive_read_finish(a);
 	throw std::runtime_error("failed to archive_read_support_format_tar()");
     }
-    if(archive_read_open_memory(a,p,s)) {
+    if(archive_read_open_filename(a,fn,16384)) {
 	archive_read_finish(a);
 	throw std::runtime_error("failed to archive_read_open_memory()");
     }

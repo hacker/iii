@@ -102,7 +102,7 @@ class tarchive_t {
 	struct archive *a;
 	struct archive_entry *e;
 
-	tarchive_t(void *p,size_t s);
+	tarchive_t(const char *);
 	~tarchive_t();
 
 	bool read_next_header();

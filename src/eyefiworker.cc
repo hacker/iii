@@ -34,13 +34,24 @@ eyefiworker::eyefiworker()
     sqlite3_initialize();
 #endif
     }
-eyefiworker::~eyefiworker() {
+
+static void *fmimewriteopen_(struct soap *soap,
+	void *handle, const char *id, const char *type, const char *description,
+	enum soap_mime_encoding encoding) {
+    return static_cast<eyefiworker*>(soap)->mime_writeopen(handle,id,type,description,encoding);
+}
+static int fmimewrite_(struct soap *soap,void *handle,const char *buf,size_t len) {
+    return static_cast<eyefiworker*>(soap)->mime_write(handle,buf,len);
+}
+static void fmimewriteclose_(struct soap *soap,void *handle) {
+    static_cast<eyefiworker*>(soap)->mime_writeclose(handle);
 }
 
 int eyefiworker::run(int bindport) {
     if(!soap_valid_socket(bind(0,bindport,64)))
 	throw std::runtime_error("failed to bind()");
     signal(SIGCHLD,SIG_IGN);
+    fmimewriteopen=fmimewriteopen_; fmimewrite=fmimewrite_; fmimewriteclose=fmimewriteclose_;
     while(true) {
 	if(!soap_valid_socket(accept()))
 	    throw std::runtime_error("failed to accept()");
@@ -110,15 +121,17 @@ int eyefiworker::StartSession(
     syslog(LOG_INFO,
 	    "StartSession request from %s with cnonce=%s, transfermode=%d, transfermodetimestamp=%ld",
 	    macaddress.c_str(), cnonce.c_str(), transfermode, transfermodetimestamp );
-    eyekinfig_t eyekinfig(macaddress);
-    r.credential = binary_t(macaddress+cnonce+eyekinfig.get_upload_key()).md5().hex();
+    kinfig.reset(new eyekinfig_t(macaddress));
+    umask(kinfig->get_umask());
+
+    r.credential = binary_t(macaddress+cnonce+kinfig->get_upload_key()).md5().hex();
 
     r.snonce = session_nonce.make_nonce().hex();
     r.transfermode=transfermode;
     r.transfermodetimestamp=transfermodetimestamp;
     r.upsyncallowed=false;
 
-    std::string cmd = eyekinfig.get_on_start_session();
+    std::string cmd = kinfig->get_on_start_session();
     if(!cmd.empty()) {
 	if(detached_child()) {
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
@@ -143,8 +156,10 @@ int eyefiworker::GetPhotoStatus(
 	    macaddress.c_str(), credential.c_str(), filename.c_str(), filesize, filesignature.c_str(), flags,
 	    session_nonce.hex().c_str() );
 
-    eyekinfig_t eyekinfig(macaddress);
-    std::string computed_credential = binary_t(macaddress+eyekinfig.get_upload_key()+session_nonce.hex()).md5().hex();
+    if(!(kinfig && kinfig->macaddress==macaddress))
+	throw std::runtime_error("I'm not talking to this peer");
+
+    std::string computed_credential = binary_t(macaddress+kinfig->get_upload_key()+session_nonce.hex()).md5().hex();
 
 #ifndef NDEBUG
     syslog(LOG_DEBUG, " computed credential=%s", computed_credential.c_str());
@@ -152,8 +167,10 @@ int eyefiworker::GetPhotoStatus(
 
     if (credential != computed_credential) throw std::runtime_error("card authentication failed");
 
+    indir.reset(new tmpdir_t(kinfig->get_targetdir()+"/.incoming.XXXXXX"));
+
 #ifdef HAVE_SQLITE
-    iiidb_t D(eyekinfig);
+    iiidb_t D(*kinfig);
     seclude::stmt_t S = D.prepare(
 	    "SELECT fileid FROM photo"
 	    " WHERE mac=:mac AND filename=:filename"
@@ -180,7 +197,10 @@ int eyefiworker::MarkLastPhotoInRoll(
     syslog(LOG_INFO,
 	    "MarkLastPhotoInRoll request from %s with mergedelta=%d",
 	    macaddress.c_str(), mergedelta );
-    std::string cmd = eyekinfig_t(macaddress).get_on_mark_last_photo_in_roll();
+    if(!(kinfig && kinfig->macaddress==macaddress))
+	throw std::runtime_error("I'm not talking to this peer");
+
+    std::string cmd = kinfig->get_on_mark_last_photo_in_roll();
     if(!cmd.empty()) {
 	if(detached_child()) {
 	    putenv( gnu::autosprintf("EYEFI_MACADDRESS=%s",macaddress.c_str()) );
@@ -195,6 +215,26 @@ int eyefiworker::MarkLastPhotoInRoll(
     return SOAP_OK;
 }catch(const std::exception& e) { return E(this,"MarkLastPhotoInRoll",e); }
 
+void *eyefiworker::mime_writeopen(void *handle,const char *id,const char *type,const char *description,
+	enum soap_mime_encoding encoding) {
+    if(!id) return NULL;
+    if(!strcmp(id,"FILENAME")) {
+	mime_tarfile.reset(new mimewrite_tarfile(*indir));
+	return mime_tarfile.get();
+    }else if(!strcmp(id,"INTEGRITYDIGEST")) {
+	mime_idigest.reset(new mimewrite_string());
+	return mime_idigest.get();
+    }
+    return NULL;
+}
+int eyefiworker::mime_write(void *handle,const char *buf,size_t len) {
+    if(!handle) return SOAP_ERR;
+    return static_cast<mimewrite_base*>(handle)->write(buf,len);
+}
+void eyefiworker::mime_writeclose(void *handle) {
+    if(handle) static_cast<mimewrite_base*>(handle)->close();
+}
+
 int eyefiworker::UploadPhoto(
 	int fileid, std::string macaddress,
 	std::string filename, long filesize, std::string filesignature,
@@ -205,87 +245,49 @@ int eyefiworker::UploadPhoto(
 	    " filesignature=%s, encryption=%s, flags=%04X",
 	    macaddress.c_str(), fileid, filename.c_str(), filesize,
 	    filesignature.c_str(), encryption.c_str(), flags );
+    if(!(kinfig && kinfig->macaddress==macaddress))
+	throw std::runtime_error("I'm not talking to this peer");
+
     std::string::size_type fnl=filename.length();
     if(fnl<sizeof(".tar") || strncmp(filename.c_str()+fnl-sizeof(".tar")+sizeof(""),".tar",sizeof(".tar")))
 	throw std::runtime_error(gnu::autosprintf("honestly, I expected the tarball coming here, not '%s'",filename.c_str()));
     std::string the_file(filename,0,fnl-sizeof(".tar")+sizeof(""));
     std::string the_log = the_file+".log";
 
-    eyekinfig_t eyekinfig(macaddress);
-
-    umask(eyekinfig.get_umask());
-
-    std::string td = eyekinfig.get_targetdir();
-    tmpdir_t indir(td+"/.incoming.XXXXXX");
-
-    std::string tf,lf;
-    binary_t digest, idigest;
-#ifdef HAVE_SQLITE
-    bool beenthere = false;
-#endif
-
-    for(soap_multipart::iterator i=mime.begin(),ie=mime.end();i!=ie;++i) {
-#ifndef NDEBUG
-	syslog(LOG_DEBUG,
-		" MIME attachment with id=%s, type=%s, size=%ld",
-		(*i).id, (*i).type, (long)(*i).size );
-#endif
-
-	if((*i).id && !strcmp((*i).id,"INTEGRITYDIGEST")) {
-	    std::string idigestr((*i).ptr,(*i).size);
-#ifndef NDEBUG
-	    syslog(LOG_DEBUG, " INTEGRITYDIGEST=%s", idigestr.c_str());
-#endif
-	    idigest.from_hex(idigestr);
-	}
-	if( (*i).id && !strcmp((*i).id,"FILENAME") ) {
-	    assert( (*i).type && !strcmp((*i).type,"application/x-tar") );
-#ifdef III_SAVE_TARS
-	    std::string tarfile = indir.get_file(filename);
-	    {
-		std::ofstream(tarfile.c_str(),std::ios::out|std::ios::binary).write((*i).ptr,(*i).size);
-	    }
-#endif
-
-	    if(!tf.empty()) throw std::runtime_error("already seen tarball");
-	    if(!digest.empty()) throw std::runtime_error("already have integrity digest");
-	    digest = integrity_digest((*i).ptr,(*i).size,eyekinfig.get_upload_key());
-#ifndef NDEBUG
-	    syslog(LOG_DEBUG," computed integrity digest=%s", digest.hex().c_str());
-#endif
-#ifdef HAVE_SQLITE
-	    if(!(*i).size) {
-		if(!already.is(filename,filesignature,filesize))
-		    throw std::runtime_error("got zero-length upload for unknown file");
-		beenthere = true; continue;
-	    }
-#endif
-
-	    tarchive_t a((*i).ptr,(*i).size);
-	    while(a.read_next_header()) {
-		std::string ep = a.entry_pathname(), f = indir.get_file(ep);
-		if(ep==the_file) tf = f;
-		else if(ep==the_log) lf = f;
-		else continue;
-		int fd=open(f.c_str(),O_CREAT|O_WRONLY,0666);
-		if(fd<0)
-		    throw std::runtime_error(gnu::autosprintf("failed to create output file '%s'",f.c_str()));
-		if(!a.read_data_into_fd(fd))
-		    throw std::runtime_error(gnu::autosprintf("failed to untar file into '%s'",f.c_str()));
-		close(fd);
-	    }
-	}
-    }
+    if(!indir) throw std::runtime_error("I haven't even created a directory!");
+    shared_ptr<tmpdir_t> dir; dir.swap(indir);
+    if(!mime_tarfile) throw std::runtime_error("I haven't written the tarball!");
+    shared_ptr<mimewrite_tarfile> file; file.swap(mime_tarfile);
+    if(!mime_idigest) throw std::runtime_error("I haven't seen the integrity digest!");
+    shared_ptr<mimewrite_string> idigest; idigest.swap(mime_idigest);
 
 #ifdef HAVE_SQLITE
-    if(beenthere) {
-	r.success=true;
+    if(!file->f.tellg()) {
+	if(!already.is(filename,filesignature,filesize))
+	    throw std::runtime_error("got zero-length upload for unknown file");
+	r.success = true;
 	return SOAP_OK;
     }
 #endif
 
+    if(idigest->str != file->idigest.final(kinfig->get_upload_key()).hex())
+	throw std::runtime_error("Integrity digest doesn't match, disintegrating.");
+
+    std::string tf, lf;
+    for(tarchive_t a(file->fn.c_str());a.read_next_header();) {
+	std::string ep = a.entry_pathname(), f = dir->get_file(ep);
+	if(ep==the_file) tf = f;
+	else if(ep==the_log) lf = f;
+	else continue;
+	int fd=open(f.c_str(),O_CREAT|O_WRONLY,0666);
+	if(fd<0)
+	    throw std::runtime_error(gnu::autosprintf("failed to create output file '%s'",f.c_str()));
+	if(!a.read_data_into_fd(fd))
+	    throw std::runtime_error(gnu::autosprintf("failed to untar file into '%s'",f.c_str()));
+	close(fd);
+    }
+
     if(tf.empty()) throw std::runtime_error("haven't seen THE file");
-    if(digest!=idigest) throw std::runtime_error("integrity digest verification failed");
 
     std::string::size_type ls = tf.rfind('/');
     // XXX: actually, lack of '/' signifies error here
@@ -294,6 +296,7 @@ int eyefiworker::UploadPhoto(
     std::string lbn = (ls==std::string::npos)?lf:lf.substr(ls+1);
     std::string ttf,tlf;
     bool success = false;
+    std::string td = kinfig->get_targetdir();
     for(int i=0;i<32767;++i) {
 	const char *fmt = i ? "%1$s/(%3$05d)%2$s" : "%1$s/%2$s";
 	ttf = (const char*)gnu::autosprintf(fmt,td.c_str(),tbn.c_str(),i);
@@ -305,11 +308,11 @@ int eyefiworker::UploadPhoto(
 	    break;
 	}
     }
-    std::string cmd = eyekinfig.get_on_upload_photo();
+    std::string cmd = kinfig->get_on_upload_photo();
     if(success) {
 #ifdef HAVE_SQLITE
 	{
-	    iiidb_t D(eyekinfig);
+	    iiidb_t D(*kinfig);
 	    D.prepare(
 		    "INSERT INTO photo"
 		    " (ctime,mac,fileid,filename,filesize,filesignature,encryption,flags)"
