@@ -89,6 +89,34 @@ uint16_t block512_t::tcpcksum(block512_t& data) {
     return 0xffff&~sum;
 }
 
+void integrity_digester::update(const void *d_,size_t s) {
+    uint8_t *d=(uint8_t*)d_;
+    if(data_size) {
+	int l = sizeof(data)-data_size;
+	if(l>s) {
+	    memmove(data.dptr(data_size),d,s); data_size+=s; return;
+	}
+	memmove(data.dptr(data_size),d,l); d+=l; s-=l;
+	md5.update<uint16_t>( data.tcpcksum(data) );
+    }
+    if(s<sizeof(data)) {
+	memmove(data.dptr(0),d,s); data_size=s; return;
+    }
+    size_t bb=s/sizeof(block512_t);
+    std::transform((block512_t*)d,((block512_t*)d)+bb,
+	    md5.updater<uint16_t>(),block512_t::tcpcksum);
+    size_t ss=bb*sizeof(block512_t);
+    d+=ss; s-=ss;
+    assert(s<sizeof(block512_t));
+    if(s) memmove(data.dptr(0),d,data_size=s);
+}
+
+binary_t integrity_digester::final(const std::string& ukey) {
+    assert(!data_size);
+    md5.update( binary_t(ukey) );
+    return md5.final();
+}
+
 static void make_path_for_template(const std::string& p,mode_t m) {
     struct stat st;
     std::string pp;

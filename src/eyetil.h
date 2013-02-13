@@ -74,6 +74,17 @@ struct block512_t {
 };
 #pragma pack()
 
+struct integrity_digester {
+    md5_digester md5;
+    size_t data_size;
+    block512_t data;
+
+    integrity_digester() : data_size(0) { }
+    void update(const void *d,size_t s);
+    binary_t final(const std::string& ukey);
+};
+
+
 class tmpdir_t {
     public:
 	std::string dir;
