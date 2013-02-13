@@ -83,6 +83,11 @@ binary_t md5_digester::final() {
     return rv;
 }
 
+uint16_t block512_t::tcpcksum(block512_t& data) {
+    uint32_t sum = std::accumulate(data.data,data.data+words,0);
+    while(uint32_t hw = sum>>16) sum = (sum&0xffff)+hw;
+    return 0xffff&~sum;
+}
 
 static void make_path_for_template(const std::string& p,mode_t m) {
     struct stat st;
@@ -150,19 +155,6 @@ bool tarchive_t::read_data_into_fd(int fd) {
     return archive_read_data_into_fd(a,fd)==ARCHIVE_OK;
 }
 
-#pragma pack(1)
-struct block512_t {
-    enum { words = 512 / sizeof(uint16_t) };
-    uint16_t data[words];
-
-    static uint16_t tcpcksum(block512_t& data) {
-	uint32_t sum = std::accumulate(data.data,data.data+words,0);
-	while(uint32_t hw = sum>>16) sum = (sum&0xffff)+hw;
-	return 0xffff&~sum;
-    }
-
-};
-#pragma pack()
 
 binary_t integrity_digest(const void *ptr,size_t size,const std::string& ukey) {
     md5_digester rv;

@@ -63,6 +63,17 @@ template<> inline void md5_digester::update<binary_t>(const binary_t& x) {
     update((const unsigned char*)&(x.front()),x.size());
 }
 
+#pragma pack(1)
+struct block512_t {
+    enum { words = 512 / sizeof(uint16_t) };
+    uint16_t data[words];
+
+    inline uint8_t *dptr(size_t o) { return ((uint8_t*)this)+o; }
+
+    static uint16_t tcpcksum(block512_t& data);
+};
+#pragma pack()
+
 class tmpdir_t {
     public:
 	std::string dir;
