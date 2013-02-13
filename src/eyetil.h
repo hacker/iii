@@ -3,9 +3,11 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 #include <archive.h>
 #include <archive_entry.h>
 #include "openssl/md5.h"
+#include "soapH.h"
 
 struct throwable_exit {
     int rc;
@@ -110,6 +112,26 @@ class tarchive_t {
 	bool read_data_into_fd(int fd);
 };
 
+struct mimewrite_base {
+    virtual ~mimewrite_base() { }
+
+    virtual int write(const char *buf,size_t len) = 0;
+    virtual void close() = 0;
+};
+struct mimewrite_string : public mimewrite_base {
+    std::string str;
+    int write(const char *buf,size_t len) { str.append(buf,len); return SOAP_OK; };
+    void close() { }
+};
+struct mimewrite_tarfile : public mimewrite_base {
+    std::string fn;
+    std::fstream f;
+    integrity_digester idigest;
+    mimewrite_tarfile(tmpdir_t& d);
+    ~mimewrite_tarfile();
+    int write(const char *buf,size_t len);
+    void close() { }
+};
 binary_t integrity_digest(const void *ptr,size_t size,
 	const std::string& ukey);
 

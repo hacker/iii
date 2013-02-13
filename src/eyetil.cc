@@ -191,3 +191,13 @@ binary_t integrity_digest(const void *ptr,size_t size,const std::string& ukey) {
     rv.update( binary_t(ukey) );
     return rv.final();
 }
+
+mimewrite_tarfile::mimewrite_tarfile(tmpdir_t& d) {
+    f.open((fn=d.get_file("the-tarfile.tar")).c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::trunc|std::ios_base::binary);
+}
+mimewrite_tarfile::~mimewrite_tarfile() {
+    unlink(fn.c_str());
+}
+int mimewrite_tarfile::write(const char *buf,size_t len) {
+    return f.write(buf,len) ? (idigest.update(buf,len),SOAP_OK) : SOAP_ERR;
+}
