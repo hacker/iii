@@ -132,7 +132,5 @@ struct mimewrite_tarfile : public mimewrite_base {
     int write(const char *buf,size_t len);
     void close() { }
 };
-binary_t integrity_digest(const void *ptr,size_t size,
-	const std::string& ukey);
 
 #endif /* __EYETIL_H */

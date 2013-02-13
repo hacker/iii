@@ -183,15 +183,6 @@ bool tarchive_t::read_data_into_fd(int fd) {
     return archive_read_data_into_fd(a,fd)==ARCHIVE_OK;
 }
 
-
-binary_t integrity_digest(const void *ptr,size_t size,const std::string& ukey) {
-    md5_digester rv;
-    std::transform( (block512_t*)ptr, ((block512_t*)ptr)+size/sizeof(block512_t),
-	    rv.updater<uint16_t>(), block512_t::tcpcksum );
-    rv.update( binary_t(ukey) );
-    return rv.final();
-}
-
 mimewrite_tarfile::mimewrite_tarfile(tmpdir_t& d) {
     f.open((fn=d.get_file("the-tarfile.tar")).c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::trunc|std::ios_base::binary);
 }
