@@ -18,6 +18,12 @@
 # include "iiidb.h"
 #endif
 
+#ifdef WITH_IPV6
+# define BINDTO "::"
+#else
+# define BINDTO 0
+#endif
+
 eyefiworker::eyefiworker()
     : eyefiService(SOAP_IO_STORE|SOAP_IO_KEEPALIVE) {
 	bind_flags = SO_REUSEADDR; max_keep_alive = 0;
@@ -48,7 +54,7 @@ static void fmimewriteclose_(struct soap *soap,void *handle) {
 }
 
 int eyefiworker::run(int bindport) {
-    if(!soap_valid_socket(bind(0,bindport,64)))
+    if(!soap_valid_socket(bind(BINDTO,bindport,64)))
 	throw std::runtime_error("failed to bind()");
     signal(SIGCHLD,SIG_IGN);
     fmimewriteopen=fmimewriteopen_; fmimewrite=fmimewrite_; fmimewriteclose=fmimewriteclose_;
