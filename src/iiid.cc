@@ -19,6 +19,7 @@
 int main(int argc,char **argv) try {
 
     int port = 59278;
+    bool daemon_mode = false;
 
     while(true) {
 	static struct option opts[] = {
@@ -27,9 +28,10 @@ int main(int argc,char **argv) try {
 	    { "version", no_argument, 0, 'V' },
 	    { "license", no_argument, 0, 'L' },
 	    { "port", required_argument, 0, 'p' },
+	    { "daemon", no_argument, 0, 'd' },
 	    { NULL, 0, 0, 0 }
 	};
-	int c = getopt_long(argc,argv,"hVLp:",opts,NULL);
+	int c = getopt_long(argc,argv,"hVLp:d",opts,NULL);
 	if(c==-1) break;
 	switch(c) {
 	    case 'h':
@@ -42,6 +44,7 @@ int main(int argc,char **argv) try {
 		    " -L, --license              show license\n"
 		    " -p <port>, --port=<port>   port to listen to\n"
 		    "           (you're not likely to ever need it)\n"
+		    " -d, --daemon               run as daemon\n"
 		    << std::endl << std::endl;
 		exit(0);
 		break;
@@ -61,6 +64,9 @@ int main(int argc,char **argv) try {
 		    exit(1);
 		}
 		break;
+		case 'd':
+		daemon_mode = true;
+		break;
 	    default:
 		std::cerr << "Huh?" << std::endl;
 		exit(1);
@@ -74,7 +80,7 @@ int main(int argc,char **argv) try {
     else
 	ident = *argv;
     openlog(ident,LOG_PERROR|LOG_PID,LOG_DAEMON);
-    syslog(LOG_INFO,"Starting iii eye-fi manager");
+    syslog(LOG_INFO,"Starting iii eye-fi manager on port %d", port);
 
     struct stat st;
     if(stat(EYEKIN_CONF_DIR,&st) || !S_ISDIR(st.st_mode))
@@ -84,6 +90,42 @@ int main(int argc,char **argv) try {
 	syslog(LOG_WARNING,"I see nothing resembling a card config in '%s'",EYEKIN_CONF_DIR);
     else
 	globfree(&g);
+
+	if(daemon_mode)	{
+        pid_t pid, sid;
+        
+        /* Fork off the parent process */
+        pid = fork();
+        if (pid < 0) {
+                exit(EXIT_FAILURE);
+        }
+        /* If we got a good PID, then
+           we can exit the parent process. */
+        if (pid > 0) {
+                exit(EXIT_SUCCESS);
+        }
+
+        /* Change the file mode mask */
+        umask(0);       
+        
+        /* Create a new SID for the child process */
+        sid = setsid();
+        if (sid < 0) {
+			syslog(LOG_ERR, "Error creating a new SID for the child process");
+			exit(EXIT_FAILURE);
+        }
+        
+        /* Change the current working directory */
+        if ((chdir("/")) < 0) {
+			syslog(LOG_ERR, "Error changing current working directory to /");
+            exit(EXIT_FAILURE);
+        }
+        
+        /* Close out the standard file descriptors */
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);		
+	}
 
     eyefiworker().run(port);
 
