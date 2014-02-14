@@ -64,7 +64,7 @@ int main(int argc,char **argv) try {
 		    exit(1);
 		}
 		break;
-		case 'd':
+	    case 'd':
 		daemon_mode = true;
 		break;
 	    default:
@@ -91,41 +91,39 @@ int main(int argc,char **argv) try {
     else
 	globfree(&g);
 
-	if(daemon_mode)	{
-        pid_t pid, sid;
+    if(daemon_mode) {
+	pid_t pid, sid;
         
-        /* Fork off the parent process */
-        pid = fork();
-        if (pid < 0) {
-                exit(EXIT_FAILURE);
-        }
-        /* If we got a good PID, then
-           we can exit the parent process. */
-        if (pid > 0) {
-                exit(EXIT_SUCCESS);
-        }
-
-        /* Change the file mode mask */
-        umask(0);       
-        
-        /* Create a new SID for the child process */
-        sid = setsid();
-        if (sid < 0) {
-			syslog(LOG_ERR, "Error creating a new SID for the child process");
-			exit(EXIT_FAILURE);
-        }
-        
-        /* Change the current working directory */
-        if ((chdir("/")) < 0) {
-			syslog(LOG_ERR, "Error changing current working directory to /");
-            exit(EXIT_FAILURE);
-        }
-        
-        /* Close out the standard file descriptors */
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);		
+	/* Fork off the parent process */
+	pid = fork();
+	if (pid < 0) {
+	    syslog(LOG_ERR, "Error forking the parent process");
+	    exit(EXIT_FAILURE);
 	}
+
+	/* If we got a good PID, then we can exit the parent process. */
+	if (pid > 0) {
+	    exit(EXIT_SUCCESS);
+	}
+
+	/* Create a new SID for the child process */
+	sid = setsid();
+	if (sid < 0) {
+	    syslog(LOG_ERR, "Error creating a new SID for the child process");
+	    exit(EXIT_FAILURE);
+	}
+        
+	/* Change the current working directory */
+	if ((chdir("/")) < 0) {
+	    syslog(LOG_ERR, "Error changing current working directory to /");
+	    exit(EXIT_FAILURE);
+	}
+        
+	/* Close out the standard file descriptors */
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);		
+    }
 
     eyefiworker().run(port);
 
