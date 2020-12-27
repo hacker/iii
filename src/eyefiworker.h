@@ -23,18 +23,18 @@ class eyefiworker : public eyefiService {
 
 	int run(int port) __attribute__ ((noreturn));
 
-	int StartSession(std::string macaddress, std::string cnonce,
+	int StartSession(const std::string& macaddress, const std::string& cnonce,
 		int transfermode, long transfermodetimestamp,
-		struct rns__StartSessionResponse &r);
-	int GetPhotoStatus(std::string credential, std::string macaddress,
-		std::string filename, long filesize, std::string filesignature, int flags,
-		struct rns__GetPhotoStatusResponse &r);
-	int MarkLastPhotoInRoll(std::string macaddress, int mergedelta,
-		struct rns__MarkLastPhotoInRollResponse &r);
-	int UploadPhoto(int fileid, std::string macaddress,
-		std::string filename, long filesize, std::string filesignature,
-		std::string encryption, int flags,
-		struct rns__UploadPhotoResponse &r);
+		struct rns__StartSessionResponse &r) override;
+	int GetPhotoStatus(const std::string& credential, const std::string& macaddress,
+		const std::string& filename, long filesize, const std::string& filesignature, int flags,
+		struct rns__GetPhotoStatusResponse &r) override;
+	int MarkLastPhotoInRoll(const std::string& macaddress, int mergedelta,
+		struct rns__MarkLastPhotoInRollResponse &r) override;
+	int UploadPhoto(int fileid, const std::string& macaddress,
+		const std::string& filename, long filesize, const std::string& filesignature,
+		const std::string& encryption, int flags,
+		struct rns__UploadPhotoResponse &r) override;
 
 	void *mime_writeopen(void *handle,const char *id,const char *type,const char *description,
 		enum soap_mime_encoding encoding);
