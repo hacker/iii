@@ -25,8 +25,8 @@ eyekinfig_t::eyekinfig_t(const std::string& ma) : macaddress(ma), cfg(0) {
 	int r = cfg_parse(cfg,cf.c_str());
 	if(r != CFG_SUCCESS) {
 	    cfg_free(cfg); cfg=0;
-	    if(CFG_FILE_ERROR) throw std::runtime_error(gnu::autosprintf("failed to open configuration file '%s'",cf.c_str()));
-	    throw std::runtime_error(gnu::autosprintf("failed to parse configuration file '%s'",cf.c_str()));
+	    if(CFG_FILE_ERROR) throw std::runtime_error(gnu::autosprintf("failed to open configuration file '%s'",cf.c_str()).operator std::string());
+	    throw std::runtime_error(gnu::autosprintf("failed to parse configuration file '%s'",cf.c_str()).operator std::string());
 	}
     }catch(...) {
 	if(cfg) cfg_free(cfg), cfg=0;
