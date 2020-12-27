@@ -32,7 +32,9 @@ ${srcdir}/eyefiservice.cc: ${builddir}/soapeyefiService.h
 ${srcdir}/iiid.cc: ${builddir}/eyefi.nsmap
 
 ${builddir}soapC.cpp ${builddir}/soapeyefiService.cpp ${builddir}/eyefi.nsmap ${builddir}/soapeyefiService.h: ${srcdir}/eyefi.h
-	${SOAPCPP2} -d${builddir} -S -L -a -i -w -x $<
+	${SOAPCPP2} -d${builddir} -S -L -a -i -w -x -z3 $<
+        # XXX: this is a dirty fix, there must be a better solution
+	sed -i 's/soap->action/soap::action/g' ${builddir}/soapeyefiService.cpp
 
 clean-local:
 	rm -f soap{{H,Stub,eyefiService}.h,{C,eyefiService}.cpp} eyefi.nsmap COPYING.cc
