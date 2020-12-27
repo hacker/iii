@@ -1,0 +1,13 @@
+FROM ubuntu:focal
+
+RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+	autoconf automake g++ gsoap libgsoap-dev libssl-dev libarchive-dev \
+	libconfuse-dev make pkgconf libasprintf-dev \
+	libsqlite3-dev uuid-dev
+
+RUN mkdir /tmp/build
+COPY . /tmp/build/
+WORKDIR /tmp/build
+
+RUN bash autogen.bash
+RUN make clean all install
